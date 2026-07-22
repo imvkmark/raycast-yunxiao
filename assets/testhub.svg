@@ -1,0 +1,21 @@
+<svg width="240" height="240" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+  <defs>
+    <linearGradient x1="50%" y1="0%" x2="50%" y2="100%" id="th">
+      <stop stop-color="#0aa5a3" stop-opacity="0.55" offset="0%"/>
+      <stop stop-color="#0aa5a3" stop-opacity="0.95" offset="100%"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="none">
+    <!-- cap -->
+    <rect x="92" y="40" width="56" height="18" rx="6" fill="#0aa5a3"/>
+    <!-- neck -->
+    <rect x="106" y="58" width="28" height="20" fill="#0aa5a3" fill-opacity="0.55"/>
+    <!-- body (test tube / flask) -->
+    <path d="M104 78 L104 168 a36 36 0 0 0 36 36 a36 36 0 0 0 36 -36 L176 78 Z"
+          fill="url(#th)" stroke="#0aa5a3" stroke-width="6" stroke-linejoin="round"/>
+    <!-- bubbles -->
+    <circle cx="116" cy="180" r="8" fill="#ffffff" fill-opacity="0.75"/>
+    <circle cx="148" cy="195" r="6" fill="#ffffff" fill-opacity="0.6"/>
+    <circle cx="130" cy="148" r="4" fill="#ffffff" fill-opacity="0.5"/>
+  </g>
+</svg>

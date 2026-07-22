@@ -1,0 +1,165 @@
+# 开发说明
+
+面向贡献者：架构、构建、扩展点。
+
+## 1. 技术栈
+
+- **运行时**：Node + Raycast Extension API (`@raycast/api`)
+- **语言**：TypeScript（React 函数式组件 + Hooks）
+- **构建**：Raycast 自带的 `ray build` / `ray develop`
+- **静态检查**：`ray lint`（内部跑 ESLint + Prettier + manifest 校验）
+- **包管理**：npm
+
+## 2. 目录结构
+
+```
+src/
+├── api/                  # 云效 OpenAPI 客户端
+│   ├── client.ts         # 通用 request 封装 + 凭证解析 + 错误类
+│   ├── projects.ts       # SearchProjects（POST /oapi/v1/projex/.../projects:search）
+│   ├── sprints.ts        # SearchSprints（POST .../sprints:search）
+│   ├── testplans.ts      # ListTestPlans（POST .../testplans:search）
+│   ├── workitems.ts      # SearchWorkitems / GetWorkitem
+│   └── types.ts          # 共享类型 + YunxiaoApiError
+├── utils/
+│   ├── format.ts         # 类别本地化、日期格式化等
+│   └── preferences.ts    # requireCredentials 包装
+├── menu.tsx              # 根菜单
+├── yunxiao-entry.tsx     # 云效门户入口（8 个深链）
+├── my-yunxiao.tsx        # 我的云效（2 个 URL 直跳）
+├── list-projects.tsx     # 项目列表
+├── list-tasks.tsx        # 任务列表
+├── get-workitem.tsx      # 工作项详情
+├── code-overview.tsx     # 占位
+└── list-test-plans.tsx   # 占位
+```
+
+## 3. 核心架构
+
+### 3.1 接入层（`src/api/`）
+
+- **`client.ts`**
+  - `resolveCredentials()`：从 `getPreferenceValues()` 读 PAT / orgId / endpointMode / regionUrl，返回 `{ baseUrl, personalAccessToken, organizationId, mode }`
+  - `buildProjexPath(creds, suffix)`：按 `mode` 拼 projex 命名空间 path
+    - `central` → `/oapi/v1/projex/organizations/{orgId}/{suffix}`
+    - `region` → `/oapi/v1/projex/{suffix}`（不拼 orgId 段）
+  - `request<T>(path, options)`：通用 GET / POST 封装，错误转 `YunxiaoApiError`（带 `status` / `url` / `bodyText` / `method`）
+
+- **`projects.ts` / `workitems.ts`**：调用 `request<T>`，按官方 `:search` 端点要求用 POST + JSON body。响应是裸数组；详情接口响应是对象。
+
+### 3.2 UI 层（`src/*.tsx`）
+
+- 每个命令一个文件，导出默认组件。
+- 列表加载模式：先 `useState(null)` 表示"未加载"，再用 `useEffect` 异步拉取，加载完成 set 到 items；出错 set 到 error 并 toast 提示。
+- EmptyView 在错误状态下提供「重新加载」与「复制错误详情」动作（见 `list-projects.tsx`）。
+
+### 3.3 偏好（`package.json` 的 `preferences`）
+
+| name                  | type      | required | 说明                                 |
+| --------------------- | --------- | -------- | ------------------------------------ |
+| `personalAccessToken` | password  | 是       | PAT，存放在 Raycast 加密偏好         |
+| `organizationId`      | textfield | 是       | 中心版必填，Region 版可能不需要      |
+| `endpointMode`        | dropdown  | 是       | `central` / `region`，默认 `central` |
+| `regionUrl`           | textfield | 否       | Region 模式下必填                    |
+
+## 4. 常用命令
+
+```bash
+# 安装依赖
+npm install
+
+# 开发模式（热重载）
+npm run dev               # 等价于 ray develop
+
+# 静态检查（manifest + icon + eslint + prettier）
+npm run lint
+
+# 类型检查
+npx tsc --noEmit
+
+# 构建（产出 .raycast 目录）
+npm run build             # 等价于 ray build
+```
+
+## 5. 端点契约（中心版 / Region 版对照）
+
+> 鉴权头：`x-yunxiao-token: <PAT>`（两种模式通用）
+
+| 操作       | 中心版 path                                                              | Region 版 path                                     | Method | Body                                                      |
+| ---------- | ------------------------------------------------------------------------ | -------------------------------------------------- | ------ | --------------------------------------------------------- |
+| 列出项目   | `/oapi/v1/projex/organizations/{orgId}/projects:search`                  | `/oapi/v1/projex/projects:search`                  | POST   | `{page,perPage,orderBy,sort,conditions?}`                 |
+| 搜索工作项 | `/oapi/v1/projex/organizations/{orgId}/workitems:search`                 | `/oapi/v1/projex/workitems:search`                 | POST   | `{spaceId,spaceType,category?,page,perPage,orderBy,sort}` |
+| 工作项详情 | `/oapi/v1/projex/organizations/{orgId}/workitems/{id}?spaceId={spaceId}` | `/oapi/v1/projex/workitems/{id}?spaceId={spaceId}` | GET    | —                                                         |
+| 列出迭代   | `/oapi/v1/projex/organizations/{orgId}/sprints:search`                   | `/oapi/v1/projex/sprints:search`                   | POST   | `{spaceId,spaceType,page,perPage,orderBy,sort}`           |
+| 列出测试计划 | `/oapi/v1/projex/organizations/{orgId}/testplans:search`               | `/oapi/v1/projex/testplans:search`                 | POST   | `{spaceId,spaceType,page,perPage}`                        |
+
+> 历史教训：`/organization/{orgId}/listProjects` 这类 `devops/2021-06-25` 端点需要阿里云 ROA 签名（AccessKey），不能用 PAT；本扩展已避开。
+
+## 6. 扩展点
+
+### 6.1 新增命令
+
+1. 在 `src/` 添加 `xxx.tsx`，导出默认 React 组件
+2. 在 `package.json` 的 `commands` 里登记：`{ "name": "xxx", "title": "...", "mode": "view" }`
+3. 在 `src/menu.tsx` 的 `MENU_ITEMS` 加一条
+
+### 6.2 新增 API 调用
+
+1. 在 `src/api/types.ts` 加响应类型
+2. 新建 `src/api/<resource>.ts`，导出 `listX()` / `getX()`，复用 `request()` + `buildProjexPath()`
+3. UI 层在 `useEffect` 里调用，参考 `list-projects.tsx` 的错误展示模式
+
+### 6.3 新增云效门户入口（`yunxiao-entry`）
+
+`src/yunxiao-entry.tsx` 是一个**纯浏览器跳转**命令，与 PAT 无关；新增条目只需在 `PORTAL_ITEMS` 数组中追加一个 `PortalItem`：
+
+```ts
+{
+  id: "testhub",
+  title: "测试管理",
+  subtitle: "Testhub 仓库 / 用例库",
+  iconSource: "assets/testhub.svg", // 放一份 SVG 到 assets/
+  url: `${BASE}/testhub/repo`,
+  shortcut: { modifiers: ["cmd", "shift"], key: "t" },
+}
+```
+
+- 静态 URL 条目使用 `Action.OpenInBrowser`，直接由 Raycast 接管打开。
+- URL 含 `{project_id}` 这种动态部分，把 `url: null`、`dynamic: "pick-project"`；主快捷键走默认项目，二级动作 `选择项目` push 项目选择器（参考 `OrgAdminProjectPicker`）。
+- 图标：仅 `package.json` 顶层 `icon` 必须 PNG；列表项 `icon={{ source: "assets/x.svg" }}` 接受 SVG。
+
+### 6.4 新增「我的云效」条目
+
+`src/my-yunxiao.tsx` 是一个**纯 URL 直跳**命令，与 PAT 无关；新增条目只需在 `MY_ITEMS` 数组中追加：
+
+```ts
+{
+  id: "my-workitems",
+  title: "负责的工作项",
+  subtitle: "我负责的全部工作项视图",
+  iconSource: "assets/my.png",
+  url: "https://devops.aliyun.com/projex/workitem",
+  shortcut: { modifiers: ["cmd", "shift"], key: "a" },
+}
+```
+
+- 不调用任何 API,因此不依赖 `resolveCredentials()`；无 PAT 凭据缺失也会跳出提示。
+- 适配到 `menu.tsx` 的 `MENU_ITEMS` 中作为单独一类入口（`icon: Icon.Person`）。
+
+### 6.4 错误展示约定
+
+- Toast 只放一行短因（`status · message[0]`）
+- EmptyView 描述放一行短因
+- `Action.CopyToClipboard` 提供完整诊断（baseUrl + mode + orgId + URL + status + response body + 排查建议）
+- 不要在错误里打印 token
+
+## 7. CI / 检查清单
+
+提交前必须通过：
+
+- [ ] `npm run lint` 无 error（warning 视情况）
+- [ ] `npx tsc --noEmit` 无错误
+- [ ] 没有 `console.log` / `debugger` 残留
+- [ ] 没有把 token 写入日志或返回值
+- [ ] API 端点改动同时检查中心版 / Region 版两种 path
+- [ ] 偏好字段改动同步更新 `README.md` 与 `docs/readme/usage.md`
