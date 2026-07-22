@@ -1,0 +1,33 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "json-tools",
+  "title": "JSON Tools",
+  "description": "Format, minify, and Unicode encode/decode JSON",
+  "icon": "icon.png",
+  "author": "duoli",
+  "categories": ["Developer Tools"],
+  "license": "MIT",
+  "commands": [
+    {
+      "name": "json-tools",
+      "title": "JSON Tools",
+      "description": "Format / Minify / Unicode Encode / Decode JSON",
+      "mode": "view"
+    }
+  ],
+  "dependencies": {
+    "@raycast/api": "^1.83.1"
+  },
+  "devDependencies": {
+    "@raycast/eslint-config": "latest",
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "typescript": "latest",
+    "eslint": "latest"
+  },
+  "scripts": {
+    "build": "ray build",
+    "dev": "ray develop",
+    "lint": "ray lint"
+  }
+}
