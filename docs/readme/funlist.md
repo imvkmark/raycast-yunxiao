@@ -9,21 +9,19 @@
 - 接入点Url
 
 **Icon**
-- 云效入口 : assets/icon.svg
-- 项目协作 : assets/project.svg
 - 测试管理 : assets/testhub.svg
-- 代码管理 : assets/codeup.svg
 - 制品仓库 : assets/packages.svg
 - 我的云效 : assets/my.png
 - 企业管理后台 : assets/org-admin.svg
 
-## 我的云效
-
-- [x] 工作项 ⌘⇧A → `https://devops.aliyun.com/projex/workitem`
-- [ ] 代码库 (默认我参与的所有代码库) 支持代码库搜索, 点击跳转
-- [ ] 合并请求 (所有已开启的请求, 点击进入入口访问)
 
 ## 云效入口
+
+### 资料
+
+- icon : assets/icon.svg
+
+### 列表
 
 - [x] 工作台 (cmd + shift + h) :  https://devops.aliyun.com/workbench
 - [x] 项目协作 (cmd + shift + p) : https://devops.aliyun.com/projex/project
@@ -36,11 +34,17 @@
 
 ## 项目协作
 
-**我**
+### 资料
+
+- icon : assets/project.svg
+
+### Sections
+
+**「Section 1」我的项目**
 - [x] 负责的工作项 ⌘⇧A → https://devops.aliyun.com/projex/workitem
 - [x] 参与的项目 ⌘⇧P → https://devops.aliyun.com/projex/project
 
-**项目清单**
+**「Section 2」项目列表**
 - [x] 列出项目 / 支持名称搜索(本地过滤)
   - [x] 回车 -> 进入项目工作项清单, 筛选项内容是(全部 / 任务 / 需求...)
     - [x] 选中工作项目(回车) -> https://devops.aliyun.com/projex/project/{project_id}/{type}/{itemid}
@@ -59,16 +63,22 @@
   - [x] 查看主题((cmd+shift+z)) -> 访问Url : https://devops.aliyun.com/projex/project/{project_id}/topic
   - [x] 查看原始诉求((cmd+shift+o)) -> 访问Url : https://devops.aliyun.com/projex/project/{project_id}/request
 
-## 任务列表(list-tasks)
+## 代码管理
 
-- [x] 项目下拉 + 类别下拉
-- [x] 工作项列表(标识 / 标题 / 类别 / 状态 / 负责人)
-- [x] 详情视图(跳转 get-workitem)
-- [x] 错误展示(toast + 详情面板)
+### 资料
 
-## 工作项详情(get-workitem)
+- icon : assets/codeup.svg
 
-- [x] 渲染 markdown 详情
-- [x] 复制 ID / 复制 JSON / 复制为 Markdown
-- [x] 在云效中打开
-- [x] 跳转开放文档
+
+### Sections
+
+**「Section 1」我的项目**
+
+- [ ] 代码库 (默认我参与的所有代码库) 支持代码库搜索, 点击跳转
+- [ ] 合并请求 (所有已开启的请求, 点击进入入口访问)
+
+**「Section 2」快速入口**
+
+- [] 代码库 : https://codeup.aliyun.com/?navKey=mine
+- [] 代码组 : https://codeup.aliyun.com/groups?navKey=mine
+- [] 合并请求 : https://codeup.aliyun.com/changes?navKey=all&search=created
