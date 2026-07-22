@@ -18,7 +18,7 @@ interface MenuItem {
 const MENU_ITEMS: MenuItem[] = [
   {
     id: "yunxiao-entry",
-    title: "云效入口",
+    title: "Yunxiao Entry",
     subtitle: "工作台 / 项目协作 / 测试管理 / 代码管理 / 制品仓库 / 企业管理后台 / 个人设置",
     icon: Icon.Link,
     open: { name: "yunxiao-entry" },

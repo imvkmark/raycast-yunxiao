@@ -1,4 +1,4 @@
-const raycastConfig = require("@raycast/eslint-config");
+import raycastConfig from "@raycast/eslint-config";
 
 /**
  * 将 @raycast/eslint-config 的扁平数组归一化为单层（其内部的

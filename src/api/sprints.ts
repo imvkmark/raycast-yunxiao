@@ -8,7 +8,7 @@
  * 响应：裸数组 [Sprint, ...]
  */
 
-import { buildProjexPath, resolveCredentials, request } from "./client";
+import { buildProjectPath, resolveCredentials, request } from "./client";
 import type { Sprint } from "./types";
 
 export interface SearchSprintsOptions {
@@ -23,13 +23,10 @@ export interface SearchSprintsOptions {
 
 export async function searchSprints(opts: SearchSprintsOptions): Promise<Sprint[]> {
   const creds = resolveCredentials();
-  if (!creds) {
-    throw new Error("缺少必要的偏好（Personal Access Token / Organization Id）。");
-  }
   const projectId = (opts.projectId ?? "").trim();
   if (!projectId) throw new Error("缺少 projectId。");
 
-  const path = buildProjexPath(creds, "sprints:search");
+  const path = buildProjectPath(creds, "sprints:search");
   const body = {
     spaceId: projectId,
     spaceType: "Project",

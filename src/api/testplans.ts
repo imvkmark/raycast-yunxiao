@@ -8,7 +8,7 @@
  * 响应：裸数组 [TestPlan, ...]
  */
 
-import { buildProjexPath, resolveCredentials, request } from "./client";
+import { buildProjectPath, resolveCredentials, request } from "./client";
 import type { TestPlan } from "./types";
 
 export interface ListTestPlansOptions {
@@ -23,13 +23,10 @@ export interface ListTestPlansOptions {
 
 export async function listTestPlans(opts: ListTestPlansOptions): Promise<TestPlan[]> {
   const creds = resolveCredentials();
-  if (!creds) {
-    throw new Error("缺少必要的偏好（Personal Access Token / Organization Id）。");
-  }
   const projectId = (opts.projectId ?? "").trim();
   if (!projectId) throw new Error("缺少 projectId。");
 
-  const path = buildProjexPath(creds, "testplans:search");
+  const path = buildProjectPath(creds, "testplans:search");
   const body = {
     spaceId: projectId,
     spaceType: "Project",

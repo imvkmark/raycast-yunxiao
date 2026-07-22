@@ -5,9 +5,10 @@
 
 import { Action, ActionPanel, Detail, Icon, Toast, showToast } from "@raycast/api";
 import { useEffect, useState } from "react";
+import { type Workitem } from "./api/types";
 import { getWorkitem } from "./api/workitems";
-import type { Workitem } from "./api/types";
 import { renderWorkitemMarkdown } from "./utils/format";
+import { workitemUrl } from "./utils/urls";
 
 interface Arguments {
   workitemId: string;
@@ -16,25 +17,25 @@ interface Arguments {
 
 export default function GetWorkitem({ arguments: args }: { arguments: Arguments }) {
   const [workitem, setWorkitem] = useState<Workitem | null>(null);
-  const [isLoading, setLoading] = useState<boolean>(true);
+  const [isLoading, setLoading] = useState(true);
   const [error, setError] = useState<string | undefined>();
 
   useEffect(() => {
     let cancelled = false;
-    (async () => {
+    void (async () => {
       if (!args?.workitemId) {
         setError("缺少 workitemId。");
         setLoading(false);
         return;
       }
       try {
-        const w = await getWorkitem(args.workitemId, args.projectId);
-        if (!cancelled) setWorkitem(w);
+        const result = await getWorkitem(args.workitemId, args.projectId);
+        if (!cancelled) setWorkitem(result);
       } catch (err) {
         if (!cancelled) {
-          const msg = err instanceof Error ? err.message : String(err);
-          setError(msg);
-          await showToast({ style: Toast.Style.Failure, title: "加载详情失败", message: msg });
+          const message = err instanceof Error ? err.message : String(err);
+          setError(message);
+          await showToast({ style: Toast.Style.Failure, title: "加载详情失败", message });
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -46,20 +47,13 @@ export default function GetWorkitem({ arguments: args }: { arguments: Arguments 
   }, [args?.workitemId, args?.projectId]);
 
   if (error) {
-    const markdown = `# 无法加载工作项\n\n**错误：** ${error}`;
     return (
       <Detail
         isLoading={isLoading}
-        markdown={markdown}
+        markdown={`# 无法加载工作项\n\n**错误：** ${error}`}
         actions={
           <ActionPanel>
             <Action.CopyToClipboard title="复制错误信息" content={error} />
-            <Action.OpenInBrowser
-              title="在云效中打开"
-              url={`https://devops.aliyun.com/${
-                args?.projectId ? `project/${encodeURIComponent(args.projectId)}/` : ""
-              }workitem/${encodeURIComponent(args?.workitemId ?? "")}`}
-            />
           </ActionPanel>
         }
       />
@@ -68,6 +62,9 @@ export default function GetWorkitem({ arguments: args }: { arguments: Arguments 
 
   const markdown = workitem ? renderWorkitemMarkdown(workitem) : "加载中…";
   const navigationTitle = workitem?.identifier ?? args?.workitemId ?? "工作项详情";
+  const browserUrl = workitem
+    ? workitemUrl(workitem.projectId ?? args?.projectId, workitem.category, workitem.id)
+    : undefined;
 
   return (
     <Detail
@@ -76,17 +73,10 @@ export default function GetWorkitem({ arguments: args }: { arguments: Arguments 
       markdown={markdown}
       actions={
         <ActionPanel>
-          <Action.CopyToClipboard
-            title="复制工作项 ID"
-            content={args?.workitemId ?? ""}
-            shortcut={{ modifiers: ["cmd"], key: "c" }}
-          />
+          <Action.CopyToClipboard title="复制工作项 ID" content={args?.workitemId ?? ""} />
           <Action.CopyToClipboard title="复制 JSON" content={JSON.stringify(workitem ?? {}, null, 2)} />
-          <Action.OpenInBrowser
-            title="在云效中打开"
-            url={`https://devops.aliyun.com/${args?.projectId ? `project/${encodeURIComponent(args.projectId)}/` : ""}workitem/${encodeURIComponent(args?.workitemId ?? "")}`}
-          />
-          {workitem ? <Action.Paste title="复制详情为 Markdown" content={markdown} /> : null}
+          {browserUrl ? <Action.OpenInBrowser title="在云效中打开" url={browserUrl} /> : null}
+          {workitem ? <Action.CopyToClipboard title="复制详情为 Markdown" content={markdown} /> : null}
           <Action.OpenInBrowser
             icon={Icon.Book}
             title="开发文档"

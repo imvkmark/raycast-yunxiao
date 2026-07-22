@@ -21,16 +21,20 @@ import {
   useNavigation,
 } from "@raycast/api";
 import { useEffect, useState } from "react";
+import { resolveCredentials } from "./api/client";
 import { listProjects } from "./api/projects";
 import { searchSprints } from "./api/sprints";
 import { listTestPlans } from "./api/testplans";
-import { resolveCredentials } from "./api/client";
 import type { Project, Sprint, TestPlan } from "./api/types";
-
-/** 进入『查看工作项』时要附加的视图过滤器 id；从官方页面 URL 中固定取到。 */
-const WORKITEM_VIEW_ID = "b3d95a58f1270afe4d4c7ae746";
-
-const BASE = "https://devops.aliyun.com";
+import {
+  projectCategoryUrl,
+  projectUrl,
+  projectWorkitemsUrl,
+  sprintBacklogUrl,
+  sprintUrl,
+  testPlanListUrl,
+  testPlanUrl,
+} from "./utils/urls";
 
 interface ErrorDetails {
   /** 一行短原因，给 toast 用 */
@@ -78,30 +82,6 @@ function toErrorDetails(err: unknown): ErrorDetails {
   return { brief, details: lines.join("\n") };
 }
 
-/* ---------- URL helpers ---------- */
-
-function urlWorkitems(projectId: string): string {
-  return `${BASE}/projex/project/${encodeURIComponent(projectId)}/workitem#viewIdentifier=${WORKITEM_VIEW_ID}`;
-}
-function urlProjectRoot(projectId: string): string {
-  return `${BASE}/projex/project/${encodeURIComponent(projectId)}`;
-}
-function urlProjectCategory(projectId: string, kind: "req" | "task" | "bug" | "topic" | "request"): string {
-  return `${urlProjectRoot(projectId)}/${kind}`;
-}
-function urlSprintBacklog(projectId: string): string {
-  return `${urlProjectRoot(projectId)}/sprint/backlog`;
-}
-function urlSprintDetail(projectId: string, sprintId: string): string {
-  return `${urlProjectRoot(projectId)}/sprint/${encodeURIComponent(sprintId)}`;
-}
-function urlTestPlanList(projectId: string): string {
-  return `${urlProjectRoot(projectId)}/testplan`;
-}
-function urlTestPlanDashboard(planId: string): string {
-  return `${BASE}/testhub/plan/${encodeURIComponent(planId)}/dashboard`;
-}
-
 /* ---------- Main command ---------- */
 
 export default function ListProjects() {
@@ -143,8 +123,13 @@ export default function ListProjects() {
   }
 
   const items = projects ?? [];
-  const filtered = filter
-    ? items.filter((p) => (p.name ?? "").includes(filter) || (p.identifier ?? "").includes(filter))
+  const normalizedFilter = filter.trim().toLocaleLowerCase();
+  const filtered = normalizedFilter
+    ? items.filter((project) =>
+        [project.name, project.identifier]
+          .filter((value): value is string => Boolean(value))
+          .some((value) => value.toLocaleLowerCase().includes(normalizedFilter)),
+      )
     : items;
 
   return (
@@ -213,7 +198,7 @@ export default function ListProjects() {
                   />
                   <Action.OpenInBrowser
                     title="所有工作项"
-                    url={urlWorkitems(pid)}
+                    url={projectWorkitemsUrl(pid)}
                     shortcut={{ modifiers: ["cmd", "shift"], key: "a" }}
                   />
                   <Action
@@ -224,7 +209,7 @@ export default function ListProjects() {
                   />
                   <Action.OpenInBrowser
                     title="访问迭代 Backlog"
-                    url={urlSprintBacklog(pid)}
+                    url={sprintBacklogUrl(pid)}
                     shortcut={{ modifiers: ["cmd", "shift"], key: "s" }}
                   />
                   <Action
@@ -235,44 +220,41 @@ export default function ListProjects() {
                   />
                   <Action.OpenInBrowser
                     title="访问测试计划"
-                    url={urlTestPlanList(pid)}
+                    url={testPlanListUrl(pid)}
                     shortcut={{ modifiers: ["cmd", "shift"], key: "p" }}
                   />
                   <Action.OpenInBrowser
                     title="概览"
-                    url={urlProjectRoot(pid)}
+                    url={projectUrl(pid)}
                     shortcut={{ modifiers: ["cmd", "shift"], key: "v" }}
                   />
                   <Action.OpenInBrowser
                     title="查看需求"
-                    url={urlProjectCategory(pid, "req")}
+                    url={projectCategoryUrl(pid, "req")}
                     shortcut={{ modifiers: ["cmd", "shift"], key: "r" }}
                   />
                   <Action.OpenInBrowser
                     title="查看任务"
-                    url={urlProjectCategory(pid, "task")}
+                    url={projectCategoryUrl(pid, "task")}
                     shortcut={{ modifiers: ["cmd", "shift"], key: "t" }}
                   />
                   <Action.OpenInBrowser
                     title="查看缺陷"
-                    url={urlProjectCategory(pid, "bug")}
+                    url={projectCategoryUrl(pid, "bug")}
                     shortcut={{ modifiers: ["cmd", "shift"], key: "b" }}
                   />
                   <Action.OpenInBrowser
                     title="查看主题"
-                    url={urlProjectCategory(pid, "topic")}
+                    url={projectCategoryUrl(pid, "topic")}
                     shortcut={{ modifiers: ["cmd", "shift"], key: "z" }}
                   />
                   <Action.OpenInBrowser
                     title="查看原始诉求"
-                    url={urlProjectCategory(pid, "request")}
+                    url={projectCategoryUrl(pid, "request")}
                     shortcut={{ modifiers: ["cmd", "shift"], key: "o" }}
                   />
                   <Action.CopyToClipboard title="复制项目 ID" content={pid} />
-                  <Action.OpenInBrowser
-                    title="在云效中打开"
-                    url={`https://devops.aliyun.com/project/${encodeURIComponent(pid)}`}
-                  />
+                  <Action.OpenInBrowser title="在云效中打开" url={projectUrl(pid)} />
                 </ActionPanel>
               }
             />
@@ -343,7 +325,7 @@ function SprintsView({ projectId, projectName }: SprintsViewProps) {
               accessories={[{ tag: s.status ?? "-" }, { text: range }]}
               actions={
                 <ActionPanel>
-                  <Action.OpenInBrowser title="访问该迭代" url={urlSprintDetail(projectId, s.id)} />
+                  <Action.OpenInBrowser title="访问该迭代" url={sprintUrl(projectId, s.id)} />
                   <Action.CopyToClipboard title="复制迭代 ID" content={s.id} />
                 </ActionPanel>
               }
@@ -413,7 +395,7 @@ function TestPlansView({ projectId, projectName }: TestPlansViewProps) {
             accessories={[{ tag: p.status ?? "-" }]}
             actions={
               <ActionPanel>
-                <Action.OpenInBrowser title="访问该测试计划" url={urlTestPlanDashboard(p.id)} />
+                <Action.OpenInBrowser title="访问该测试计划" url={testPlanUrl(p.id)} />
                 <Action.CopyToClipboard title="复制计划 ID" content={p.id} />
               </ActionPanel>
             }

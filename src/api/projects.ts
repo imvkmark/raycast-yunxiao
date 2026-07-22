@@ -8,7 +8,7 @@
  * （x-page、x-per-page、x-total、x-next-page）。
  */
 
-import { buildProjexPath, resolveCredentials, request } from "./client";
+import { buildProjectPath, resolveCredentials, request } from "./client";
 import type { Project } from "./types";
 
 interface SearchProjectsResponse {
@@ -38,11 +38,8 @@ export interface ListProjectsOptions {
  */
 export async function listProjects(opts: ListProjectsOptions = {}): Promise<Project[]> {
   const creds = resolveCredentials();
-  if (!creds) {
-    throw new Error("缺少必要的偏好（Personal Access Token / Organization Id）。");
-  }
 
-  const path = buildProjexPath(creds, "projects:search");
+  const path = buildProjectPath(creds, "projects:search");
   const perPage = clampPerPage(opts.perPage ?? 50);
   const page = Math.max(1, Math.floor(opts.page ?? 1));
 

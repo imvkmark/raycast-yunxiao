@@ -15,15 +15,16 @@
 ```
 src/
 ├── api/                  # 云效 OpenAPI 客户端
-│   ├── client.ts         # 通用 request 封装 + 凭证解析 + 错误类
+│   ├── client.ts         # 通用 request 封装 + Raycast 偏好读取 + 错误类
 │   ├── projects.ts       # SearchProjects（POST /oapi/v1/projex/.../projects:search）
 │   ├── sprints.ts        # SearchSprints（POST .../sprints:search）
 │   ├── testplans.ts      # ListTestPlans（POST .../testplans:search）
 │   ├── workitems.ts      # SearchWorkitems / GetWorkitem
 │   └── types.ts          # 共享类型 + YunxiaoApiError
 ├── utils/
-│   ├── format.ts         # 类别本地化、日期格式化等
-│   └── preferences.ts    # requireCredentials 包装
+│   ├── credentials.ts   # 可独立测试的凭证校验与规范化
+│   ├── urls.ts          # 统一的云效浏览器 URL 构造
+│   └── format.ts        # 类别本地化、日期格式化等
 ├── menu.tsx              # 根菜单
 ├── yunxiao-entry.tsx     # 云效门户入口（8 个深链）
 ├── my-yunxiao.tsx        # 我的云效（2 个 URL 直跳）
@@ -39,11 +40,14 @@ src/
 ### 3.1 接入层（`src/api/`）
 
 - **`client.ts`**
-  - `resolveCredentials()`：从 `getPreferenceValues()` 读 PAT / orgId / endpointMode / regionUrl，返回 `{ baseUrl, personalAccessToken, organizationId, mode }`
-  - `buildProjexPath(creds, suffix)`：按 `mode` 拼 projex 命名空间 path
-    - `central` → `/oapi/v1/projex/organizations/{orgId}/{suffix}`
-    - `region` → `/oapi/v1/projex/{suffix}`（不拼 orgId 段）
-  - `request<T>(path, options)`：通用 GET / POST 封装，错误转 `YunxiaoApiError`（带 `status` / `url` / `bodyText` / `method`）
+    - `resolveCredentials()`：从 `getPreferenceValues()` 读取偏好，再交给 `utils/credentials.ts` 的纯解析器统一校验
+    - `buildProjexPath(creds, suffix)`：按 `mode` 拼 projex 命名空间 path
+        - `central` → `/oapi/v1/projex/organizations/{orgId}/{suffix}`
+        - `region` → `/oapi/v1/projex/{suffix}`（不拼 orgId 段）
+    - `request<T>(path, options)`：通用 GET / POST 封装，错误转 `YunxiaoApiError`（带 `status` / `url` / `bodyText` / `method`），并从诊断内容中移除 PAT
+
+- **`utils/credentials.ts`**：纯函数校验 PAT、Organization Id 和 Region URL；Region URL 会 trim、去除尾部 `/`，并要求带主机名的完整 HTTPS URL。共享的脱敏 helper 会替换诊断文本中 PAT 的所有出现位置。
+- **`utils/urls.ts`**：集中构造项目、typed 工作项、迭代、测试计划和企业管理 URL；所有动态 path segment 都编码。
 
 - **`projects.ts` / `workitems.ts`**：调用 `request<T>`，按官方 `:search` 端点要求用 POST + JSON body。响应是裸数组；详情接口响应是对象。
 
@@ -58,9 +62,9 @@ src/
 | name                  | type      | required | 说明                                 |
 | --------------------- | --------- | -------- | ------------------------------------ |
 | `personalAccessToken` | password  | 是       | PAT，存放在 Raycast 加密偏好         |
-| `organizationId`      | textfield | 是       | 中心版必填，Region 版可能不需要      |
+| `organizationId`      | textfield | 是       | 中心版与 Region 版都必填             |
 | `endpointMode`        | dropdown  | 是       | `central` / `region`，默认 `central` |
-| `regionUrl`           | textfield | 否       | Region 模式下必填                    |
+| `regionUrl`           | textfield | 否       | Region 模式下必填且必须使用 HTTPS    |
 
 ## 4. 常用命令
 
@@ -70,6 +74,9 @@ npm install
 
 # 开发模式（热重载）
 npm run dev               # 等价于 ray develop
+
+# 无第三方依赖的纯 helper 测试（Node 24）
+npm test
 
 # 静态检查（manifest + icon + eslint + prettier）
 npm run lint
@@ -85,13 +92,13 @@ npm run build             # 等价于 ray build
 
 > 鉴权头：`x-yunxiao-token: <PAT>`（两种模式通用）
 
-| 操作       | 中心版 path                                                              | Region 版 path                                     | Method | Body                                                      |
-| ---------- | ------------------------------------------------------------------------ | -------------------------------------------------- | ------ | --------------------------------------------------------- |
-| 列出项目   | `/oapi/v1/projex/organizations/{orgId}/projects:search`                  | `/oapi/v1/projex/projects:search`                  | POST   | `{page,perPage,orderBy,sort,conditions?}`                 |
-| 搜索工作项 | `/oapi/v1/projex/organizations/{orgId}/workitems:search`                 | `/oapi/v1/projex/workitems:search`                 | POST   | `{spaceId,spaceType,category?,page,perPage,orderBy,sort}` |
-| 工作项详情 | `/oapi/v1/projex/organizations/{orgId}/workitems/{id}?spaceId={spaceId}` | `/oapi/v1/projex/workitems/{id}?spaceId={spaceId}` | GET    | —                                                         |
-| 列出迭代   | `/oapi/v1/projex/organizations/{orgId}/sprints:search`                   | `/oapi/v1/projex/sprints:search`                   | POST   | `{spaceId,spaceType,page,perPage,orderBy,sort}`           |
-| 列出测试计划 | `/oapi/v1/projex/organizations/{orgId}/testplans:search`               | `/oapi/v1/projex/testplans:search`                 | POST   | `{spaceId,spaceType,page,perPage}`                        |
+| 操作         | 中心版 path                                                              | Region 版 path                                     | Method | Body                                                      |
+| ------------ | ------------------------------------------------------------------------ | -------------------------------------------------- | ------ | --------------------------------------------------------- |
+| 列出项目     | `/oapi/v1/projex/organizations/{orgId}/projects:search`                  | `/oapi/v1/projex/projects:search`                  | POST   | `{page,perPage,orderBy,sort,conditions?}`                 |
+| 搜索工作项   | `/oapi/v1/projex/organizations/{orgId}/workitems:search`                 | `/oapi/v1/projex/workitems:search`                 | POST   | `{spaceId,spaceType,category?,page,perPage,orderBy,sort}` |
+| 工作项详情   | `/oapi/v1/projex/organizations/{orgId}/workitems/{id}?spaceId={spaceId}` | `/oapi/v1/projex/workitems/{id}?spaceId={spaceId}` | GET    | —                                                         |
+| 列出迭代     | `/oapi/v1/projex/organizations/{orgId}/sprints:search`                   | `/oapi/v1/projex/sprints:search`                   | POST   | `{spaceId,spaceType,page,perPage,orderBy,sort}`           |
+| 列出测试计划 | `/oapi/v1/projex/organizations/{orgId}/testplans:search`                 | `/oapi/v1/projex/testplans:search`                 | POST   | `{spaceId,spaceType,page,perPage}`                        |
 
 > 历史教训：`/organization/{orgId}/listProjects` 这类 `devops/2021-06-25` 端点需要阿里云 ROA 签名（AccessKey），不能用 PAT；本扩展已避开。
 
@@ -125,7 +132,7 @@ npm run build             # 等价于 ray build
 ```
 
 - 静态 URL 条目使用 `Action.OpenInBrowser`，直接由 Raycast 接管打开。
-- URL 含 `{project_id}` 这种动态部分，把 `url: null`、`dynamic: "pick-project"`；主快捷键走默认项目，二级动作 `选择项目` push 项目选择器（参考 `OrgAdminProjectPicker`）。
+- 需要从偏好拼 URL 的条目（例如「企业管理后台」需要 `organizationId`）：把 `url` 留 `null` 并提供 `unavailableMessage`；当偏好缺失时主动作改为 toast 提示用户在偏好中补齐，不要再做项目选择器之类的二级流程。
 - 图标：仅 `package.json` 顶层 `icon` 必须 PNG；列表项 `icon={{ source: "assets/x.svg" }}` 接受 SVG。
 
 ### 6.4 新增「我的云效」条目
@@ -157,6 +164,7 @@ npm run build             # 等价于 ray build
 
 提交前必须通过：
 
+- [ ] `npm test` 全部通过
 - [ ] `npm run lint` 无 error（warning 视情况）
 - [ ] `npx tsc --noEmit` 无错误
 - [ ] 没有 `console.log` / `debugger` 残留

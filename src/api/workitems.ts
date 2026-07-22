@@ -8,7 +8,7 @@
  * 列工作项走 POST `:search`，单条走 GET + spaceId 查询参数。
  */
 
-import { buildProjexPath, resolveCredentials, request } from "./client";
+import { buildProjectPath, resolveCredentials, request } from "./client";
 import type { PaginatedResult, Workitem, WorkitemCategory } from "./types";
 
 const MAX_RESULTS = 50;
@@ -32,9 +32,6 @@ export interface ListWorkitemsOptions {
  */
 export async function listWorkitems(opts: ListWorkitemsOptions): Promise<PaginatedResult<Workitem>> {
   const creds = resolveCredentials();
-  if (!creds) {
-    throw new Error("缺少必要的偏好（Personal Access Token / Organization Id）。");
-  }
   const projectId = (opts.projectId ?? "").trim();
   if (!projectId) {
     throw new Error("缺少 projectId（spaceId）。请在扩展命令参数或表单中提供。");
@@ -44,7 +41,7 @@ export async function listWorkitems(opts: ListWorkitemsOptions): Promise<Paginat
   const page = Math.max(1, Math.floor(opts.page ?? 1));
   const category = opts.category && opts.category !== "All" ? opts.category : "";
 
-  const path = buildProjexPath(creds, "workitems:search");
+  const path = buildProjectPath(creds, "workitems:search");
   const body: Record<string, unknown> = {
     spaceId: projectId,
     spaceType: "Project",
@@ -71,13 +68,10 @@ export async function listWorkitems(opts: ListWorkitemsOptions): Promise<Paginat
  */
 export async function getWorkitem(workitemId: string, projectId?: string): Promise<Workitem> {
   const creds = resolveCredentials();
-  if (!creds) {
-    throw new Error("缺少必要的偏好（Personal Access Token / Organization Id）。");
-  }
   const id = (workitemId ?? "").trim();
   if (!id) throw new Error("缺少 workitemId。");
 
-  const path = `${buildProjexPath(creds, `workitems/${encodeURIComponent(id)}`)}${
+  const path = `${buildProjectPath(creds, `workitems/${encodeURIComponent(id)}`)}${
     projectId ? `?spaceId=${encodeURIComponent(projectId)}` : ""
   }`;
 
