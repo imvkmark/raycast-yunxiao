@@ -6,8 +6,7 @@
 
 本版本（v0.2）提供：
 
-- **项目列表** —— 列出你所属 organization 下的所有项目，支持关键字筛选；在项目上按回车即可展开「查看工作项」子视图（按类别筛选、本地搜索、跳转详情），并提供迭代、测试计划、概览、各类别深链等一键直达动作。
-- **工作项详情** —— 由「查看工作项」子视图打开，或以 `workitemId` 参数直接调用。
+- **项目列表** —— 列出你所属 organization 下的所有项目，支持关键字筛选；在项目上按回车即可展开「查看工作项」子视图（按类别筛选、本地搜索、就地渲染详情），并提供迭代、测试计划、概览、各类别深链等一键直达动作。
 - **占位命令** —— 代码总览、测试计划（下一阶段实现）。
 
 ## 偏好设置
@@ -29,7 +28,6 @@
 | ----------------- | ------------ | ----------------------------------------------- |
 | `menu`            | `云效`       | 根菜单，分子模块跳转                            |
 | `list-projects`   | `项目列表`   | 浏览我的项目 → 「查看工作项」子视图（类别筛选 + 本地搜索 + 详情跳转）；同时支持关键字筛选 |
-| `get-workitem`    | `工作项详情` | 由「查看工作项」子视图跳转；同时支持 Raycast 直接调用           |
 | `code-overview`   | `代码总览`   | 占位                                            |
 | `list-test-plans` | `测试计划`   | 占位                                            |
 
@@ -55,7 +53,6 @@ npx tsc --noEmit   # 类型检查
 | ------------------ | ---------------------------------------------------------------------- |
 | SearchProjects     | https://help.aliyun.com/zh/yunxiao/developer-reference/searchprojects  |
 | SearchWorkitems    | https://help.aliyun.com/zh/yunxiao/developer-reference/searchworkitems |
-| GetWorkitem        | https://help.aliyun.com/zh/yunxiao/developer-reference/getworkitem     |
 | ListProjectMembers | https://help.aliyun.com/document_detail/2870170.html                   |
 | API 列表总览       | https://help.aliyun.com/document_detail/460575.html                    |
 

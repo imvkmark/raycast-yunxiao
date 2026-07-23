@@ -19,7 +19,7 @@ src/
 │   ├── projects.ts       # SearchProjects（POST /oapi/v1/projex/.../projects:search）
 │   ├── sprints.ts        # SearchSprints（POST .../sprints:search）
 │   ├── testplans.ts      # ListTestPlans（POST .../testplans:search）
-│   ├── workitems.ts      # SearchWorkitems / GetWorkitem
+│   ├── workitems.ts      # SearchWorkitems
 │   ├── codeup.ts         # ListRepositories / ListOpenMergeRequests（GET /oapi/v1/codeup/...）
 │   └── types.ts          # 共享类型 + YunxiaoApiError
 ├── utils/
@@ -28,8 +28,7 @@ src/
 │   └── format.ts        # 类别本地化、日期格式化等
 ├── menu.tsx              # 根菜单
 ├── yunxiao-entry.tsx     # 云效门户入口（按业务域分组：工作台 / 项目协作 / 测试管理 / 代码管理 / 制品仓库 / 企业管理后台 / 个人设置）
-├── list-projects.tsx     # 项目列表（含查看工作项 / 迭代 / 测试计划 三个子视图）
-├── get-workitem.tsx      # 工作项详情
+├── list-projects.tsx     # 项目列表（含查看工作项 / 迭代 / 测试计划 三个子视图 + 内联的工作项详情）
 └── list-test-plans.tsx   # 测试计划列表（直接列出当前组织所有可见的测试计划；搜索栏右侧下拉按项目 / 状态过滤）
 
 ## 3. 核心架构

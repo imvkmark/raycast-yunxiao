@@ -30,8 +30,6 @@ declare namespace Preferences {
   export type ListRepositories = ExtensionPreferences & {}
   /** Preferences accessible in the `list-merge-requests` command */
   export type ListMergeRequests = ExtensionPreferences & {}
-  /** Preferences accessible in the `get-workitem` command */
-  export type GetWorkitem = ExtensionPreferences & {}
   /** Preferences accessible in the `list-test-plans` command */
   export type ListTestPlans = ExtensionPreferences & {}
 }
@@ -45,13 +43,6 @@ declare namespace Arguments {
   export type ListRepositories = {}
   /** Arguments passed to the `list-merge-requests` command */
   export type ListMergeRequests = {}
-  /** Arguments passed to the `get-workitem` command */
-  export type GetWorkitem = {
-  /** 工作项 ID */
-  "workitemId": string,
-  /** 项目 ID (可选) */
-  "projectId": string
-}
   /** Arguments passed to the `list-test-plans` command */
   export type ListTestPlans = {}
 }

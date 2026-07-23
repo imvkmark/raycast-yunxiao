@@ -12,11 +12,10 @@
 import {
   Action,
   ActionPanel,
+  Detail,
   Icon,
-  LaunchType,
   List,
   Toast,
-  launchCommand,
   showToast,
   useNavigation,
 } from "@raycast/api";
@@ -34,7 +33,7 @@ import {
   type WorkitemCategory,
 } from "./api/types";
 import { listWorkitems } from "./api/workitems";
-import { categoryLabel } from "./utils/format";
+import { categoryLabel, renderWorkitemMarkdown } from "./utils/format";
 import {
   projectCategoryUrl,
   projectUrl,
@@ -438,6 +437,7 @@ interface WorkitemsViewProps {
 }
 
 function WorkitemsView({ projectId, projectName }: WorkitemsViewProps) {
+  const { push } = useNavigation();
   const [category, setCategory] = useState<CategoryFilter>(ALL_CATEGORY_VALUE);
   const [items, setItems] = useState<Workitem[]>([]);
   const [searchText, setSearchText] = useState("");
@@ -446,20 +446,8 @@ function WorkitemsView({ projectId, projectName }: WorkitemsViewProps) {
   const [reloadGeneration, setReloadGeneration] = useState(0);
   const requestGeneration = useRef(0);
 
-  async function openWorkitem(item: Workitem) {
-    try {
-      await launchCommand({
-        name: "get-workitem",
-        type: LaunchType.UserInitiated,
-        arguments: {
-          workitemId: item.id,
-          projectId: item.projectId ?? projectId,
-        },
-      });
-    } catch (err) {
-      const message = err instanceof Error ? err.message : String(err);
-      await showToast({ style: Toast.Style.Failure, title: "打开详情失败", message });
-    }
+  function openWorkitem(item: Workitem) {
+    push(<WorkitemDetailView workitem={item} fallbackProjectId={projectId} />);
   }
 
   useEffect(() => {
@@ -585,4 +573,38 @@ function iconForCategory(category: WorkitemCategory | string | undefined): Icon 
     default:
       return Icon.Circle;
   }
+}
+
+/* ---------- Workitem detail (inline) ---------- */
+
+interface WorkitemDetailViewProps {
+  workitem: Workitem;
+  /** 当 workitem.projectId 缺失时使用的回退项目 id */
+  fallbackProjectId: string;
+}
+
+function WorkitemDetailView({ workitem, fallbackProjectId }: WorkitemDetailViewProps) {
+  const markdown = renderWorkitemMarkdown(workitem);
+  const navigationTitle = workitem.identifier ?? workitem.id;
+  const browserUrl = workitemUrl(workitem.projectId ?? fallbackProjectId, workitem.category, workitem.id);
+
+  return (
+    <Detail
+      navigationTitle={navigationTitle}
+      markdown={markdown}
+      actions={
+        <ActionPanel>
+          <Action.CopyToClipboard title="复制工作项 ID" content={workitem.id} />
+          <Action.CopyToClipboard title="复制 JSON" content={JSON.stringify(workitem, null, 2)} />
+          <Action.CopyToClipboard title="复制详情为 Markdown" content={markdown} />
+          {browserUrl ? <Action.OpenInBrowser title="在云效中打开" url={browserUrl} /> : null}
+          <Action.OpenInBrowser
+            icon={Icon.Book}
+            title="开发文档"
+            url="https://help.aliyun.com/document_detail/460575.html"
+          />
+        </ActionPanel>
+      }
+    />
+  );
 }

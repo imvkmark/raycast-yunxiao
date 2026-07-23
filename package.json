@@ -88,27 +88,8 @@
             "mode": "view"
         },
         {
-            "name": "get-workitem",
-            "title": "工作项详情",
-            "description": "由项目列表中的「查看工作项」打开，查看工作项的 markdown 详情。",
-            "mode": "view",
-            "arguments": [
-                {
-                    "name": "workitemId",
-                    "type": "text",
-                    "placeholder": "工作项 ID"
-                },
-                {
-                    "name": "projectId",
-                    "type": "text",
-                    "placeholder": "项目 ID (可选)",
-                    "optional": true
-                }
-            ]
-        },
-        {
             "name": "list-test-plans",
-            "title": "测试计划",
+            "title": "Search Test Plan",
             "description": "按项目列出测试计划，支持 TODO / DOING / DONE 状态过滤，回车在 Testhub 中打开。",
             "icon": "testhub.png",
             "mode": "view"
