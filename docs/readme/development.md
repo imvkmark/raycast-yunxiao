@@ -20,19 +20,18 @@ src/
 │   ├── sprints.ts        # SearchSprints（POST .../sprints:search）
 │   ├── testplans.ts      # ListTestPlans（POST .../testplans:search）
 │   ├── workitems.ts      # SearchWorkitems / GetWorkitem
+│   ├── codeup.ts         # ListRepositories / ListOpenMergeRequests（GET /oapi/v1/codeup/...）
 │   └── types.ts          # 共享类型 + YunxiaoApiError
 ├── utils/
 │   ├── credentials.ts   # 可独立测试的凭证校验与规范化
-│   ├── urls.ts          # 统一的云效浏览器 URL 构造
+│   ├── urls.ts          # 统一的云效浏览器 URL 构造（含 Codeup 入口与安全 HTTPS 校验）
 │   └── format.ts        # 类别本地化、日期格式化等
 ├── menu.tsx              # 根菜单
-├── yunxiao-entry.tsx     # 云效门户入口（8 个深链）
-├── list-projects.tsx     # 项目列表
-├── list-tasks.tsx        # 任务列表
+├── yunxiao-entry.tsx     # 云效门户入口（按业务域分组：工作台 / 项目协作 / 测试管理 / 代码管理 / 制品仓库 / 企业管理后台 / 个人设置）
+├── list-projects.tsx     # 项目列表（含查看工作项 / 迭代 / 测试计划 三个子视图）
 ├── get-workitem.tsx      # 工作项详情
-├── code-overview.tsx     # 占位
-└── list-test-plans.tsx   # 占位
-```
+├── codeup.tsx            # Codeup 总览页（聚合代码库 / 合并请求命令入口；浏览器快速入口已迁到 yunxiao-entry）
+└── list-test-plans.tsx   # 测试计划列表（项目选择器 + 状态过滤下拉）
 
 ## 3. 核心架构
 
@@ -97,7 +96,10 @@ npm run build             # 等价于 ray build
 | 搜索工作项   | `/oapi/v1/projex/organizations/{orgId}/workitems:search`                 | `/oapi/v1/projex/workitems:search`                 | POST   | `{spaceId,spaceType,category?,page,perPage,orderBy,sort}` |
 | 工作项详情   | `/oapi/v1/projex/organizations/{orgId}/workitems/{id}?spaceId={spaceId}` | `/oapi/v1/projex/workitems/{id}?spaceId={spaceId}` | GET    | —                                                         |
 | 列出迭代     | `/oapi/v1/projex/organizations/{orgId}/sprints:search`                   | `/oapi/v1/projex/sprints:search`                   | POST   | `{spaceId,spaceType,page,perPage,orderBy,sort}`           |
-| 列出测试计划 | `/oapi/v1/projex/organizations/{orgId}/testplans:search`                 | `/oapi/v1/projex/testplans:search`                 | POST   | `{spaceId,spaceType,page,perPage}`                        |
+| 列出测试计划 | `/oapi/v1/projex/organizations/{orgId}/testPlan/list`                   | `/oapi/v1/projex/testPlan/list`                    | POST   | query: `{page,perPage,projectIdentifier?,sprintIdentifier?,status?,name?}` |
+
+| 列出代码库 | `/oapi/v1/codeup/organizations/{orgId}/repositories` | `/oapi/v1/codeup/repositories` | GET | `{page,perPage,orderBy,sort,search?,archived?}` |
+| 查询合并请求 | `/oapi/v1/codeup/organizations/{orgId}/changeRequests` | `/oapi/v1/codeup/changeRequests` | GET | `{page,perPage,projectIds?,authorIds?,reviewerIds?,state=opened,search?,orderBy,sort,createdAfter?,createdBefore?}`（state 取值：opened / merged / closed，默认 opened） |
 
 > 历史教训：`/organization/{orgId}/listProjects` 这类 `devops/2021-06-25` 端点需要阿里云 ROA 签名（AccessKey），不能用 PAT；本扩展已避开。
 
@@ -117,22 +119,24 @@ npm run build             # 等价于 ray build
 
 ### 6.3 新增云效门户入口（`yunxiao-entry`）
 
-`src/yunxiao-entry.tsx` 是一个**纯浏览器跳转**命令，与 PAT 无关；新增条目只需在 `PORTAL_ITEMS` 数组中追加一个 `PortalItem`：
+`src/yunxiao-entry.tsx` 是一个**纯浏览器跳转**命令，与 PAT 无关；条目按业务域分到不同 `List.Section` 中渲染，新增条目只需在 `PORTAL_ITEMS` 数组中追加一个 `PortalItem`，并指定 `section`：
 
 ```ts
 {
   id: "testhub",
+  section: "test",  // 工作台 / projex / test / codeup / packages / admin / settings
   title: "测试管理",
   subtitle: "Testhub 仓库 / 用例库",
-  iconSource: "assets/testhub.svg", // 放一份 SVG 到 assets/
   url: `${BASE}/testhub/repo`,
   shortcut: { modifiers: ["cmd", "shift"], key: "t" },
 }
 ```
 
+- 分组由 `section` 字段决定；新增分组时同时在 `SECTION_LAYOUT` 数组里登记 `id` 与中文标题，否则条目不会渲染。
 - 静态 URL 条目使用 `Action.OpenInBrowser`，直接由 Raycast 接管打开。
 - 需要从偏好拼 URL 的条目（例如「企业管理后台」需要 `organizationId`）：把 `url` 留 `null` 并提供 `unavailableMessage`；当偏好缺失时主动作改为 toast 提示用户在偏好中补齐，不要再做项目选择器之类的二级流程。
 - 图标：仅 `package.json` 顶层 `icon` 必须 PNG；列表项 `icon={{ source: "assets/x.png" }}` 接受 PNG（PNG 比 SVG 渲染更可靠，建议统一使用 PNG）。
+- Codeup 浏览器快速入口（代码库 / 代码组 / 合并请求）由本命令的「代码管理」分组承担；不要在 `codeup.tsx` 总览页重复添加。
 
 ### 6.4 错误展示约定
 

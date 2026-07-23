@@ -17,18 +17,39 @@ interface MenuItem {
 
 const MENU_ITEMS: MenuItem[] = [
     {
-        id: "list-tasks",
-        title: "任务列表",
-        subtitle: "按项目与类别过滤查看我的工作项",
-        icon: Icon.List,
-        open: { name: "list-tasks" },
-    },
-    {
         id: "list-projects",
         title: "项目列表",
         subtitle: "浏览我可访问的云效项目",
         icon: Icon.Folder,
         open: { name: "list-projects" },
+    },
+    {
+        id: "codeup",
+        title: "代码管理",
+        subtitle: "Codeup 总览：代码库与合并请求命令入口",
+        icon: Icon.Globe,
+        open: { name: "codeup" },
+    },
+    {
+        id: "list-repositories",
+        title: "代码库",
+        subtitle: "按名称 / 路径 / 命名空间筛选组织内的代码库",
+        icon: Icon.Folder,
+        open: { name: "list-repositories" },
+    },
+    {
+        id: "list-merge-requests",
+        title: "合并请求",
+        subtitle: "按状态筛选开启 / 已合并 / 已关闭的合并请求",
+        icon: Icon.Link,
+        open: { name: "list-merge-requests" },
+    },
+    {
+        id: "list-test-plans",
+        title: "测试计划",
+        subtitle: "按项目列出测试计划，支持 TODO / DOING / DONE 状态过滤",
+        icon: Icon.Bug,
+        open: { name: "list-test-plans" },
     },
 ];
 

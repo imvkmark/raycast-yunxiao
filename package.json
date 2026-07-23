@@ -74,36 +74,49 @@
             "mode": "view"
         },
         {
-            "name": "list-tasks",
-            "title": "任务列表",
-            "description": "按项目与类别过滤查看我的工作项。",
+            "name": "codeup",
+            "title": "Codeup",
+            "description": "代码管理总览：聚合代码库与合并请求命令入口（Codeup 浏览器快速入口已迁到云效入口的「代码管理」分组）。",
+            "icon": "codeup.png",
+            "mode": "view"
+        },
+        {
+            "name": "list-repositories",
+            "title": "List Repositories",
+            "description": "浏览当前组织下可访问的代码库，支持名称 / 路径 / 命名空间本地搜索，回车在 Codeup 中打开。",
+            "icon": "codeup.png",
+            "mode": "view"
+        },
+        {
+            "name": "list-merge-requests",
+            "title": "List Merge Requests",
+            "description": "查看合并请求，支持按开启 / 已合并 / 已关闭 状态筛选。",
+            "icon": "codeup.png",
+            "mode": "view"
+        },
+        {
+            "name": "get-workitem",
+            "title": "工作项详情",
+            "description": "由项目列表中的「查看工作项」打开，查看工作项的 markdown 详情。",
             "mode": "view",
             "arguments": [
                 {
-                    "name": "projectId",
+                    "name": "workitemId",
                     "type": "text",
-                    "placeholder": "项目 ID (可留空)",
-                    "optional": true
+                    "placeholder": "工作项 ID"
                 },
                 {
-                    "name": "category",
+                    "name": "projectId",
                     "type": "text",
-                    "placeholder": "类别: Req/Bug/Task/Risk/Request/Topic",
+                    "placeholder": "项目 ID (可选)",
                     "optional": true
                 }
             ]
         },
         {
-            "name": "code-overview",
-            "title": "代码总览",
-            "description": "代码模块总览 (后续版本提供，敬请期待)",
-            "icon": "codeup.png",
-            "mode": "view"
-        },
-        {
             "name": "list-test-plans",
             "title": "测试计划",
-            "description": "测试计划命令 (后续版本提供，敬请期待)",
+            "description": "按项目列出测试计划，支持 TODO / DOING / DONE 状态过滤，回车在 Testhub 中打开。",
             "icon": "testhub.png",
             "mode": "view"
         }

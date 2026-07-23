@@ -1,6 +1,6 @@
 /**
  * 工作项详情命令（get-workitem）。
- * 由 list-tasks 通过 launchCommand 跳入；也可在 Raycast 中直接调用。
+ * 由 list-projects 的「查看工作项」子视图通过 launchCommand 跳入；也可在 Raycast 中直接调用。
  */
 
 import { Action, ActionPanel, Detail, Icon, Toast, showToast } from "@raycast/api";

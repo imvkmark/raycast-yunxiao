@@ -22,16 +22,39 @@
 
 - icon : assets/icon.svg
 
-### 列表
+### Sections
+
+**「Section 1」工作台**
 
 - [x] 工作台 (cmd + shift + h) : https://devops.aliyun.com/workbench
+
+**「Section 2」项目协作**
+
 - [x] 项目协作 (cmd + shift + p) : https://devops.aliyun.com/projex/project
 - [x] 项目协作（个人工作项）(cmd + shift + a) : https://devops.aliyun.com/projex/workitem#viewIdentifier=441e17ad4f72718076eedcf5
+
+**「Section 3」测试管理**
+
 - [x] 测试管理 (cmd + shift + t) : https://devops.aliyun.com/testhub/repo
+
+**「Section 4」代码管理**
+
 - [x] 代码管理 (cmd + shift + c) : https://codeup.aliyun.com/
+- [x] 代码库 (cmd + shift + b) : https://codeup.aliyun.com/?navKey=mine
+- [x] 代码组 (cmd + shift + g) : https://codeup.aliyun.com/groups?navKey=mine
+- [x] 合并请求 (cmd + shift + e) : https://codeup.aliyun.com/changes?navKey=all&search=created
+
+**「Section 5」制品仓库**
+
 - [x] 制品仓库 (cmd + shift + r) : https://packages.aliyun.com/
+
+**「Section 6」企业管理后台**
+
 - [x] 企业管理后台 (cmd + shift + m) : https://devops.aliyun.com/org-admin/{organization_id}/members/member
-- [x] 个人设置 (cmd + shift + s) https://account-devops.aliyun.com/settings/profile
+
+**「Section 7」个人设置**
+
+- [x] 个人设置 (cmd + shift + s) : https://account-devops.aliyun.com/settings/profile
 
 ## 项目协作
 
@@ -70,17 +93,42 @@
 
 ### 资料
 
-- icon : assets/codeup.svg
+- icon : assets/codeup.png
 
-### Sections
+### 顶层命令
+
+- [x] 代码管理 (`codeup`) : 总览页，聚合代码库与合并请求命令入口
+- [x] 代码库 (`list-repositories`) : 列出我参与的所有代码库，支持本地搜索 + 回车跳转
+- [x] 合并请求 (`list-merge-requests`) : 列出合并请求，支持按开启 / 已合并 / 已关闭 状态筛选
+
+### Sections（`codeup` 总览页）
 
 **「Section 1」我的项目**
 
-- [ ] 代码库 (默认我参与的所有代码库) 支持代码库搜索, 点击跳转
-- [ ] 合并请求 (所有已开启的请求, 点击进入入口访问)
+- [x] 代码库 (命令跳转) → `list-repositories`
+- [x] 合并请求 (命令跳转) → `list-merge-requests`
 
-**「Section 2」快速入口**
+> Codeup 浏览器快速入口（代码库 / 代码组 / 合并请求）已迁移到 `yunxiao-entry` 的「代码管理」分组，避免重复入口。
 
-- [ ] 代码库 : https://codeup.aliyun.com/?navKey=mine
-- [ ] 代码组 : https://codeup.aliyun.com/groups?navKey=mine
-- [ ] 合并请求 : https://codeup.aliyun.com/changes?navKey=all&search=created
+## 测试管理
+
+### 资料
+
+- icon : assets/testhub.png
+
+### 顶层命令
+
+- [x] 测试计划 (`list-test-plans`) : 选择项目后列出测试计划，支持 TODO / DOING / DONE 状态过滤；回车在 Testhub 中打开 `https://devops.aliyun.com/testhub/plan/{plan_id}/dashboard`；附「复制计划 ID」动作。
+
+### Sections
+
+**「Section 1」按项目分组**
+
+- [x] 选择项目（Form 下拉，单项目时自动选中）
+- [x] 测试计划列表（状态过滤下拉 / 本地搜索：名称、ID、状态原值、状态中文、负责人 ID、项目 ID）
+- [x] 操作：在 Testhub 中打开、复制计划 ID
+
+**「Section 2」项目列表内嵌入口（`list-projects`）**
+
+- [x] 查看测试计划(cmd+shift+alt+t) -> 查询所有测试计划, 计划id 是 {plan_id}
+    - [x] 访问{测试计划}(回车) -> 访问Url : https://devops.aliyun.com/testhub/plan/{plan_id}/dashboard

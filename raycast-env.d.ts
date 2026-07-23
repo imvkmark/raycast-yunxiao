@@ -26,10 +26,14 @@ declare namespace Preferences {
   export type YunxiaoEntry = ExtensionPreferences & {}
   /** Preferences accessible in the `list-projects` command */
   export type ListProjects = ExtensionPreferences & {}
-  /** Preferences accessible in the `list-tasks` command */
-  export type ListTasks = ExtensionPreferences & {}
-  /** Preferences accessible in the `code-overview` command */
-  export type CodeOverview = ExtensionPreferences & {}
+  /** Preferences accessible in the `codeup` command */
+  export type Codeup = ExtensionPreferences & {}
+  /** Preferences accessible in the `list-repositories` command */
+  export type ListRepositories = ExtensionPreferences & {}
+  /** Preferences accessible in the `list-merge-requests` command */
+  export type ListMergeRequests = ExtensionPreferences & {}
+  /** Preferences accessible in the `get-workitem` command */
+  export type GetWorkitem = ExtensionPreferences & {}
   /** Preferences accessible in the `list-test-plans` command */
   export type ListTestPlans = ExtensionPreferences & {}
 }
@@ -39,15 +43,19 @@ declare namespace Arguments {
   export type YunxiaoEntry = {}
   /** Arguments passed to the `list-projects` command */
   export type ListProjects = {}
-  /** Arguments passed to the `list-tasks` command */
-  export type ListTasks = {
-  /** 项目 ID (可留空) */
-  "projectId": string,
-  /** 类别: Req/Bug/Task/Risk/Request/Topic */
-  "category": string
+  /** Arguments passed to the `codeup` command */
+  export type Codeup = {}
+  /** Arguments passed to the `list-repositories` command */
+  export type ListRepositories = {}
+  /** Arguments passed to the `list-merge-requests` command */
+  export type ListMergeRequests = {}
+  /** Arguments passed to the `get-workitem` command */
+  export type GetWorkitem = {
+  /** 工作项 ID */
+  "workitemId": string,
+  /** 项目 ID (可选) */
+  "projectId": string
 }
-  /** Arguments passed to the `code-overview` command */
-  export type CodeOverview = {}
   /** Arguments passed to the `list-test-plans` command */
   export type ListTestPlans = {}
 }

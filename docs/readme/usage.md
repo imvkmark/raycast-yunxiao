@@ -23,36 +23,72 @@
 
 ## 3. 命令清单
 
-| 命令              | 入口关键字   | 行为                                                                                                  |
-| ----------------- | ------------ | ----------------------------------------------------------------------------------------------------- |
-| `menu`            | `云效`       | 根菜单，分子集（云效入口 / 任务 / 项目 / 代码 / 测试）                                                |
-| `yunxiao-entry`   | `云效入口`   | 一键直达 8 个常用门户（工作台 / 项目协作 / 测试管理 / 代码管理 / 制品仓库 / 企业管理后台 / 个人设置） |
-| `list-tasks`      | `任务列表`   | 有项目参数时直达工作项列表；否则选择项目；支持类别与本地搜索                                          |
-| `list-projects`   | `项目列表`   | 列出当前 organization 下可访问的项目 → 一键查看任务                                                   |
-| `get-workitem`    | `工作项详情` | 由任务列表跳转，或直接以参数 `workitemId` 打开                                                        |
-| `code-overview`   | `代码总览`   | 占位（即将推出）                                                                                      |
-| `list-test-plans` | `测试计划`   | 占位（即将推出）                                                                                      |
+| 命令                  | 入口关键字   | 行为                                                                                                  |
+| --------------------- | ------------ | ----------------------------------------------------------------------------------------------------- |
+| `menu`                | `云效`       | 根菜单，分子集（云效入口 / 项目 / 代码 / 测试）                                                |
+| `yunxiao-entry`       | `云效入口`   | 一键直达常用门户，按业务域分组（工作台 / 项目协作 / 测试管理 / 代码管理 / 制品仓库 / 企业管理后台 / 个人设置） |
+| `list-projects`       | `项目列表`   | 列出当前 organization 下可访问的项目 → 「查看工作项」子视图（类别筛选 + 本地搜索 + 详情跳转）；同时支持关键字筛选 |
+| `get-workitem`        | `工作项详情` | 由「查看工作项」子视图跳转，或直接以参数 `workitemId` 打开                                                        |
+| `codeup`              | `代码管理`   | Codeup 总览：聚合代码库与合并请求命令入口（浏览器快速入口已迁到 `yunxiao-entry` 的「代码管理」分组） |
+| `list-repositories`   | `代码库`     | 列出当前组织下可访问的代码库，支持名称 / 路径 / 命名空间本地搜索，回车在 Codeup 中打开                |
+| `list-merge-requests` | `合并请求`   | 列出合并请求，支持按开启 / 已合并 / 已关闭 状态筛选                                                   |
+| `list-test-plans`     | `测试计划`   | 选择项目后列出测试计划，支持 TODO / DOING / DONE 状态过滤，回车在 Testhub 中打开 |
 
 ### 3.1 云效入口（`yunxiao-entry`）
 
-按 ⌘ 打开 Raycast → 输入 `云效入口` 进入。在 List 里选中条目 → 回车直接打开浏览器；每行都带一个 ⌘⇧ + 字母 的主快捷键：
+按 ⌘ 打开 Raycast → 输入 `云效入口` 进入。List 按业务域分组（工作台 / 项目协作 / 测试管理 / 代码管理 / 制品仓库 / 企业管理后台 / 个人设置），选中条目 → 回车直接打开浏览器；每行都带一个 ⌘⇧ + 字母 的主快捷键：
 
-| 条目             | 主快捷键 | 跳转 URL                                                       | 备注                                                   |
-| ---------------- | -------- | -------------------------------------------------------------- | ------------------------------------------------------ |
-| 工作台           | ⌘⇧H      | `devops.aliyun.com/workbench`                                  | -                                                      |
-| 项目协作         | ⌘⇧P      | `devops.aliyun.com/projex/project`                             | -                                                      |
-| 项目协作（个人） | ⌘⇧A      | `devops.aliyun.com/projex/workitem#viewIdentifier=441e17ad...` | 我负责的全部工作项                                     |
-| 测试管理         | ⌘⇧T      | `devops.aliyun.com/testhub/repo`                               | Testhub 仓库 / 用例库                                  |
-| 代码管理         | ⌘⇧C      | `codeup.aliyun.com/`                                           | Codeup 主页                                            |
-| 制品仓库         | ⌘⇧R      | `packages.aliyun.com/`                                         | Packages 私有制品库                                    |
-| 企业管理后台     | ⌘⇧M      | `devops.aliyun.com/org-admin/{organization_id}/members/member` | 直接用偏好中的 Organization Id；未配置时提示去偏好设置 |
-| 个人设置         | ⌘⇧S      | `account-devops.aliyun.com/settings/profile`                   | -                                                      |
+**工作台**
+
+| 条目   | 主快捷键 | 跳转 URL                       | 备注 |
+| ------ | -------- | ------------------------------ | ---- |
+| 工作台 | ⌘⇧H      | `devops.aliyun.com/workbench`  | -    |
+
+**项目协作**
+
+| 条目             | 主快捷键 | 跳转 URL                                                       | 备注               |
+| ---------------- | -------- | -------------------------------------------------------------- | ------------------ |
+| 项目协作         | ⌘⇧P      | `devops.aliyun.com/projex/project`                             | -                  |
+| 项目协作（个人） | ⌘⇧A      | `devops.aliyun.com/projex/workitem#viewIdentifier=441e17ad...` | 我负责的全部工作项 |
+
+**测试管理**
+
+| 条目     | 主快捷键 | 跳转 URL                       | 备注                |
+| -------- | -------- | ------------------------------ | ------------------- |
+| 测试管理 | ⌘⇧T      | `devops.aliyun.com/testhub/repo` | Testhub 仓库 / 用例库 |
+
+**代码管理**
+
+| 条目     | 主快捷键 | 跳转 URL                                                       | 备注     |
+| -------- | -------- | -------------------------------------------------------------- | -------- |
+| 代码管理 | ⌘⇧C      | `codeup.aliyun.com/`                                           | Codeup 主页 |
+| 代码库   | ⌘⇧B      | `codeup.aliyun.com/?navKey=mine`                               | 我参与的代码库 |
+| 代码组   | ⌘⇧G      | `codeup.aliyun.com/groups?navKey=mine`                         | 我参与的代码组 |
+| 合并请求 | ⌘⇧E      | `codeup.aliyun.com/changes?navKey=all&search=created`          | 我创建的合并请求 |
+
+**制品仓库**
+
+| 条目     | 主快捷键 | 跳转 URL              | 备注                 |
+| -------- | -------- | --------------------- | -------------------- |
+| 制品仓库 | ⌘⇧R      | `packages.aliyun.com/` | Packages 私有制品库 |
+
+**企业管理后台**
+
+| 条目         | 主快捷键 | 跳转 URL                                                       | 备注                                                   |
+| ------------ | -------- | -------------------------------------------------------------- | ------------------------------------------------------ |
+| 企业管理后台 | ⌘⇧M      | `devops.aliyun.com/org-admin/{organization_id}/members/member` | 直接用偏好中的 Organization Id；未配置时提示去偏好设置 |
+
+**个人设置**
+
+| 条目     | 主快捷键 | 跳转 URL                                       | 备注 |
+| -------- | -------- | ---------------------------------------------- | ---- |
+| 个人设置 | ⌘⇧S      | `account-devops.aliyun.com/settings/profile`   | -    |
 
 > 这些 URL 走浏览器登录态，与本扩展的 PAT 无关；如果在浏览器未登录云效则会被 SSO 重定向。
 
 ### 3.2 项目列表操作（`list-projects`）
 
-进入 `项目列表` 后，选中项目并按回车会直接打开该项目的工作项列表，不再经过二次提交表单。列表顶部类别下拉包含「全部、需求、缺陷、任务、风险、原始诉求、主题」；搜索会在本地匹配工作项标题、编号、类别原值及中文名、负责人和状态，不会发起额外 API 请求。
+进入 `项目列表` 后，按回车（或主动作「查看工作项」）会直接打开该项目的工作项列表子视图，不再经过二次提交表单。列表顶部类别下拉包含「全部、需求、缺陷、任务、风险、原始诉求、主题」；搜索会在本地匹配工作项标题、编号、类别原值及中文名、负责人和状态，不会发起额外 API 请求。
 
 工作项的「在云效中打开」动作只在项目 ID、工作项 ID 与已知类别都完整时显示，使用 canonical URL：`https://devops.aliyun.com/projex/project/{project_id}/{type}/{workitem_id}`。其中 `type` 严格对应 `req`、`bug`、`task`、`risk`、`request`、`topic`。
 
@@ -78,6 +114,33 @@
 | 查看测试计划 | ⌘⇧⌥T   | 拉取该项目测试计划列表 → 选计划 → 浏览器打开 |
 
 > `list-projects` 内部 ⌘⇧P（访问测试计划）和 `yunxiao-entry` 内部 ⌘⇧P（项目协作）按命令域独立，无冲突。
+
+### 3.3 代码管理（`codeup` / `list-repositories` / `list-merge-requests`）
+
+代码管理命令已抽成三个顶层命令：
+
+- `codeup`：总览页，把两个列表入口聚合在一起。Codeup 浏览器快速入口已迁移到 `yunxiao-entry` 的「代码管理」分组，避免重复入口。
+- `list-repositories`：列出当前 organization 下可访问的代码库，按名称 / 路径 / 命名空间本地搜索，回车可在 Codeup 浏览器中打开。
+- `list-merge-requests`：列出合并请求，搜索栏右侧带状态下拉，可切换「开启 / 已合并 / 已关闭」，默认 `opened`；切换会立即重新拉取对应状态的合并请求（与官方 `ListChangeRequests` 的 `state` 参数对应），搜索框 placeholder 与节标题也会随之更新。
+
+`list-repositories` 与 `list-merge-requests` 内部都按页加载所有可见结果（每页 100 条，最多 150 页以避免无界拉取）。从 `codeup` 进入时用主操作直接 `launchCommand` 跳到对应命令。
+
+Codeup 浏览器快速入口（已迁移到 `yunxiao-entry` 的「代码管理」分组）：
+
+| 入口     | 主快捷键 | URL                                                           |
+| -------- | -------- | ------------------------------------------------------------- |
+| 代码库   | ⌘⇧B      | `https://codeup.aliyun.com/?navKey=mine`                      |
+| 代码组   | ⌘⇧G      | `https://codeup.aliyun.com/groups?navKey=mine`                |
+| 合并请求 | ⌘⇧E      | `https://codeup.aliyun.com/changes?navKey=all&search=created` |
+
+### 3.4 测试计划（`list-test-plans`）
+
+进入 `测试计划` 命令后，先弹出一个「选择项目」表单；选定项目后进入该项目的测试计划列表：
+
+- 搜索栏右侧带状态过滤下拉：全部 / 未开始（TODO）/ 进行中（DOING）/ 已完成（DONE）；切换会按官方 ListTestPlan 的 `status` 查询参数重新拉取。
+- 搜索覆盖计划名、计划 ID、状态原值、状态中文、负责人 ID 与项目 ID，大小写不敏感。
+- 选中计划 → 「在 Testhub 中打开」跳转到 `https://devops.aliyun.com/testhub/plan/{plan_id}/dashboard`；「复制计划 ID」把 `testPlanIdentifier` 写入剪贴板。
+- 底层走 `POST /oapi/v1/projex/organizations/{orgId}/testPlan/list`（Region 版去掉 `organizations/{orgId}/` 段），参数通过 query 传递：`page`、`perPage`、`projectIdentifier`、`sprintIdentifier?`、`status?`、`name?`。分页信息通过响应头 `x-page` / `x-per-page` / `x-total` / `x-next-page` / `x-total-pages` 携带；本命令一次拉一页（默认 `perPage=200`，官方上限 1000）。
 
 ## 4. 接入点选哪个
 

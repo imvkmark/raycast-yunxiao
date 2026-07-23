@@ -1,7 +1,7 @@
 /**
  * 项目列表命令（list-projects）。
  * 列出当前 organization 下可访问的项目；选择项目后操作可直达：
- *   - 工作项（指定 view）、迭代、测试计划、概览、各类别（需求/任务/缺陷/主题/原始诉求）
+ *   - 工作项（拉取列表后再选择，跳详情）、迭代、测试计划、概览、各类别（需求/任务/缺陷/主题/原始诉求）
  *   - 查看迭代 / 查看测试计划 拉取列表后再跳链
  *
  * 错误展示策略：
@@ -18,14 +18,23 @@ import {
   Toast,
   launchCommand,
   showToast,
-  useNavigation, Keyboard,
+  useNavigation,
 } from "@raycast/api";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { resolveCredentials } from "./api/client";
 import { listProjects } from "./api/projects";
 import { searchSprints } from "./api/sprints";
 import { listTestPlans } from "./api/testplans";
-import type { Project, Sprint, TestPlan } from "./api/types";
+import {
+  WORKITEM_CATEGORIES,
+  type Project,
+  type Sprint,
+  type TestPlan,
+  type Workitem,
+  type WorkitemCategory,
+} from "./api/types";
+import { listWorkitems } from "./api/workitems";
+import { categoryLabel } from "./utils/format";
 import {
   projectCategoryUrl,
   projectUrl,
@@ -34,7 +43,24 @@ import {
   sprintUrl,
   testPlanListUrl,
   testPlanUrl,
+  workitemUrl,
 } from "./utils/urls";
+
+const ALL_CATEGORY_VALUE = "All";
+type CategoryFilter = WorkitemCategory | typeof ALL_CATEGORY_VALUE;
+
+const CATEGORY_OPTIONS: { value: CategoryFilter; title: string }[] = [
+  { value: ALL_CATEGORY_VALUE, title: "全部" },
+  ...WORKITEM_CATEGORIES.map((category) => ({ value: category, title: categoryLabel(category) })),
+];
+
+function normalizeCategory(input: string | undefined): CategoryFilter {
+  const normalized = input?.trim();
+  if (normalized === ALL_CATEGORY_VALUE || WORKITEM_CATEGORIES.includes(normalized as WorkitemCategory)) {
+    return normalized as CategoryFilter;
+  }
+  return ALL_CATEGORY_VALUE;
+}
 
 interface ErrorDetails {
   /** 一行短原因，给 toast 用 */
@@ -122,6 +148,10 @@ export default function ListProjects() {
     push(<TestPlansView projectId={project.id} projectName={project.name ?? project.id} />);
   }
 
+  function showWorkitems(project: Project) {
+    push(<WorkitemsView projectId={project.id} projectName={project.name ?? project.id} />);
+  }
+
   const items = projects ?? [];
   const normalizedFilter = filter.trim().toLocaleLowerCase();
   const filtered = normalizedFilter
@@ -188,13 +218,7 @@ export default function ListProjects() {
                   <Action
                     title="查看工作项"
                     icon={Icon.List}
-                    onAction={() =>
-                      launchCommand({
-                        name: "list-tasks",
-                        type: LaunchType.UserInitiated,
-                        arguments: { projectId: pid },
-                      })
-                    }
+                    onAction={() => showWorkitems(p)}
                   />
                   <Action.OpenInBrowser
                     title="所有工作项"
@@ -404,4 +428,161 @@ function TestPlansView({ projectId, projectName }: TestPlansViewProps) {
       </List.Section>
     </List>
   );
+}
+
+/* ---------- Workitems sub-view ---------- */
+
+interface WorkitemsViewProps {
+  projectId: string;
+  projectName: string;
+}
+
+function WorkitemsView({ projectId, projectName }: WorkitemsViewProps) {
+  const [category, setCategory] = useState<CategoryFilter>(ALL_CATEGORY_VALUE);
+  const [items, setItems] = useState<Workitem[]>([]);
+  const [searchText, setSearchText] = useState("");
+  const [isLoading, setLoading] = useState(true);
+  const [error, setError] = useState<string | undefined>();
+  const [reloadGeneration, setReloadGeneration] = useState(0);
+  const requestGeneration = useRef(0);
+
+  async function openWorkitem(item: Workitem) {
+    try {
+      await launchCommand({
+        name: "get-workitem",
+        type: LaunchType.UserInitiated,
+        arguments: {
+          workitemId: item.id,
+          projectId: item.projectId ?? projectId,
+        },
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      await showToast({ style: Toast.Style.Failure, title: "打开详情失败", message });
+    }
+  }
+
+  useEffect(() => {
+    const generation = ++requestGeneration.current;
+    const controller = new AbortController();
+    setLoading(true);
+    setError(undefined);
+
+    void (async () => {
+      try {
+        const result = await listWorkitems({
+          projectId,
+          category,
+          page: 1,
+          perPage: 200,
+          signal: controller.signal,
+        });
+        if (generation === requestGeneration.current) setItems(result.items);
+      } catch (err) {
+        if (controller.signal.aborted || generation !== requestGeneration.current) return;
+        const message = err instanceof Error ? err.message : String(err);
+        setError(message);
+        await showToast({ style: Toast.Style.Failure, title: "加载失败", message });
+      } finally {
+        if (generation === requestGeneration.current) setLoading(false);
+      }
+    })();
+
+    return () => controller.abort();
+  }, [projectId, category, reloadGeneration]);
+
+  const normalizedSearch = searchText.trim().toLocaleLowerCase();
+  const filteredItems = useMemo(() => {
+    if (!normalizedSearch) return items;
+    return items.filter((item) =>
+      [
+        item.subject,
+        item.identifier,
+        item.category,
+        categoryLabel(item.category),
+        item.assignee?.name,
+        item.status?.name,
+      ]
+        .filter((value): value is string => Boolean(value))
+        .some((value) => value.toLocaleLowerCase().includes(normalizedSearch)),
+    );
+  }, [items, normalizedSearch]);
+  const titleSuffix = category === ALL_CATEGORY_VALUE ? "全部" : categoryLabel(category);
+
+  return (
+    <List
+      isLoading={isLoading}
+      filtering={false}
+      onSearchTextChange={setSearchText}
+      searchBarPlaceholder={`搜索 ${projectName} · ${titleSuffix} 的工作项…`}
+      searchBarAccessory={
+        <List.Dropdown
+          tooltip="工作项类别"
+          value={category}
+          onChange={(value) => setCategory(normalizeCategory(value))}
+        >
+          {CATEGORY_OPTIONS.map((option) => (
+            <List.Dropdown.Item key={option.value} value={option.value} title={option.title} />
+          ))}
+        </List.Dropdown>
+      }
+    >
+      <List.EmptyView
+        icon={error ? Icon.ExclamationMark : Icon.MagnifyingGlass}
+        title={error ? "无法加载工作项" : items.length === 0 ? "暂无工作项" : "没有匹配项"}
+        description={error ?? (items.length === 0 ? "尝试切换类别后再试一次。" : "尝试其他搜索关键词。")}
+        actions={
+          error ? (
+            <ActionPanel>
+              <Action title="重新加载" onAction={() => setReloadGeneration((value) => value + 1)} />
+            </ActionPanel>
+          ) : undefined
+        }
+      />
+      <List.Section title={`${projectName} · ${titleSuffix}`}>
+        {filteredItems.map((workitem) => {
+          const browserUrl = workitemUrl(workitem.projectId ?? projectId, workitem.category, workitem.id);
+          return (
+            <List.Item
+              key={workitem.id}
+              icon={iconForCategory(workitem.category)}
+              title={workitem.subject ?? "(无标题)"}
+              subtitle={workitem.identifier ?? workitem.id}
+              accessories={[
+                { tag: { value: workitem.category ? categoryLabel(workitem.category) : "-", color: undefined } },
+                { text: workitem.assignee?.name ?? "未指派" },
+                { tag: { value: workitem.status?.name ?? "-", color: undefined } },
+              ]}
+              actions={
+                <ActionPanel>
+                  <Action title="查看详情" icon={Icon.Eye} onAction={() => openWorkitem(workitem)} />
+                  <Action.CopyToClipboard title="复制工作项 ID" content={workitem.id} />
+                  {browserUrl ? <Action.OpenInBrowser title="在云效中打开" url={browserUrl} /> : null}
+                </ActionPanel>
+              }
+            />
+          );
+        })}
+      </List.Section>
+    </List>
+  );
+}
+
+function iconForCategory(category: WorkitemCategory | string | undefined): Icon {
+  switch (category) {
+    case "Bug":
+      return Icon.Bug;
+    case "Task":
+      return Icon.Checkmark;
+    case "Req":
+      return Icon.Document;
+    case "Risk":
+      return Icon.ExclamationMark;
+    case "Request":
+      return Icon.Envelope;
+    case "Topic":
+      return Icon.Tag;
+    default:
+      return Icon.Circle;
+  }
 }
