@@ -24,13 +24,6 @@ const MENU_ITEMS: MenuItem[] = [
         open: { name: "list-projects" },
     },
     {
-        id: "codeup",
-        title: "代码管理",
-        subtitle: "Codeup 总览：代码库与合并请求命令入口",
-        icon: Icon.Globe,
-        open: { name: "codeup" },
-    },
-    {
         id: "list-repositories",
         title: "代码库",
         subtitle: "按名称 / 路径 / 命名空间筛选组织内的代码库",

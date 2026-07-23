@@ -26,8 +26,6 @@ declare namespace Preferences {
   export type YunxiaoEntry = ExtensionPreferences & {}
   /** Preferences accessible in the `list-projects` command */
   export type ListProjects = ExtensionPreferences & {}
-  /** Preferences accessible in the `codeup` command */
-  export type Codeup = ExtensionPreferences & {}
   /** Preferences accessible in the `list-repositories` command */
   export type ListRepositories = ExtensionPreferences & {}
   /** Preferences accessible in the `list-merge-requests` command */
@@ -43,8 +41,6 @@ declare namespace Arguments {
   export type YunxiaoEntry = {}
   /** Arguments passed to the `list-projects` command */
   export type ListProjects = {}
-  /** Arguments passed to the `codeup` command */
-  export type Codeup = {}
   /** Arguments passed to the `list-repositories` command */
   export type ListRepositories = {}
   /** Arguments passed to the `list-merge-requests` command */

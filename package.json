@@ -74,13 +74,6 @@
             "mode": "view"
         },
         {
-            "name": "codeup",
-            "title": "Codeup",
-            "description": "代码管理总览：聚合代码库与合并请求命令入口（Codeup 浏览器快速入口已迁到云效入口的「代码管理」分组）。",
-            "icon": "codeup.png",
-            "mode": "view"
-        },
-        {
             "name": "list-repositories",
             "title": "List Repositories",
             "description": "浏览当前组织下可访问的代码库，支持名称 / 路径 / 命名空间本地搜索，回车在 Codeup 中打开。",

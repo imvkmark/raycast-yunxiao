@@ -30,8 +30,7 @@ src/
 ├── yunxiao-entry.tsx     # 云效门户入口（按业务域分组：工作台 / 项目协作 / 测试管理 / 代码管理 / 制品仓库 / 企业管理后台 / 个人设置）
 ├── list-projects.tsx     # 项目列表（含查看工作项 / 迭代 / 测试计划 三个子视图）
 ├── get-workitem.tsx      # 工作项详情
-├── codeup.tsx            # Codeup 总览页（聚合代码库 / 合并请求命令入口；浏览器快速入口已迁到 yunxiao-entry）
-└── list-test-plans.tsx   # 测试计划列表（项目选择器 + 状态过滤下拉）
+└── list-test-plans.tsx   # 测试计划列表（直接列出当前组织所有可见的测试计划；搜索栏右侧下拉按项目 / 状态过滤）
 
 ## 3. 核心架构
 
@@ -136,7 +135,7 @@ npm run build             # 等价于 ray build
 - 静态 URL 条目使用 `Action.OpenInBrowser`，直接由 Raycast 接管打开。
 - 需要从偏好拼 URL 的条目（例如「企业管理后台」需要 `organizationId`）：把 `url` 留 `null` 并提供 `unavailableMessage`；当偏好缺失时主动作改为 toast 提示用户在偏好中补齐，不要再做项目选择器之类的二级流程。
 - 图标：仅 `package.json` 顶层 `icon` 必须 PNG；列表项 `icon={{ source: "assets/x.png" }}` 接受 PNG（PNG 比 SVG 渲染更可靠，建议统一使用 PNG）。
-- Codeup 浏览器快速入口（代码库 / 代码组 / 合并请求）由本命令的「代码管理」分组承担；不要在 `codeup.tsx` 总览页重复添加。
+- Codeup 浏览器快速入口（代码库 / 代码组 / 合并请求）由本命令的「代码管理」分组承担；不要在其他命令里重复添加。
 
 ### 6.4 错误展示约定
 

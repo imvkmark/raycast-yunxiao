@@ -29,10 +29,9 @@
 | `yunxiao-entry`       | `云效入口`   | 一键直达常用门户，按业务域分组（工作台 / 项目协作 / 测试管理 / 代码管理 / 制品仓库 / 企业管理后台 / 个人设置） |
 | `list-projects`       | `项目列表`   | 列出当前 organization 下可访问的项目 → 「查看工作项」子视图（类别筛选 + 本地搜索 + 详情跳转）；同时支持关键字筛选 |
 | `get-workitem`        | `工作项详情` | 由「查看工作项」子视图跳转，或直接以参数 `workitemId` 打开                                                        |
-| `codeup`              | `代码管理`   | Codeup 总览：聚合代码库与合并请求命令入口（浏览器快速入口已迁到 `yunxiao-entry` 的「代码管理」分组） |
 | `list-repositories`   | `代码库`     | 列出当前组织下可访问的代码库，支持名称 / 路径 / 命名空间本地搜索，回车在 Codeup 中打开                |
 | `list-merge-requests` | `合并请求`   | 列出合并请求，支持按开启 / 已合并 / 已关闭 状态筛选                                                   |
-| `list-test-plans`     | `测试计划`   | 选择项目后列出测试计划，支持 TODO / DOING / DONE 状态过滤，回车在 Testhub 中打开 |
+| `list-test-plans`     | `测试计划`   | 直接列出当前组织下所有可见的测试计划；搜索栏右侧下拉可按项目 / 状态进一步过滤，回车在 Testhub 中打开 |
 
 ### 3.1 云效入口（`yunxiao-entry`）
 
@@ -115,15 +114,14 @@
 
 > `list-projects` 内部 ⌘⇧P（访问测试计划）和 `yunxiao-entry` 内部 ⌘⇧P（项目协作）按命令域独立，无冲突。
 
-### 3.3 代码管理（`codeup` / `list-repositories` / `list-merge-requests`）
+### 3.3 代码管理（`list-repositories` / `list-merge-requests`）
 
-代码管理命令已抽成三个顶层命令：
+代码管理命令目前是两个顶层列表命令：
 
-- `codeup`：总览页，把两个列表入口聚合在一起。Codeup 浏览器快速入口已迁移到 `yunxiao-entry` 的「代码管理」分组，避免重复入口。
 - `list-repositories`：列出当前 organization 下可访问的代码库，按名称 / 路径 / 命名空间本地搜索，回车可在 Codeup 浏览器中打开。
 - `list-merge-requests`：列出合并请求，搜索栏右侧带状态下拉，可切换「开启 / 已合并 / 已关闭」，默认 `opened`；切换会立即重新拉取对应状态的合并请求（与官方 `ListChangeRequests` 的 `state` 参数对应），搜索框 placeholder 与节标题也会随之更新。
 
-`list-repositories` 与 `list-merge-requests` 内部都按页加载所有可见结果（每页 100 条，最多 150 页以避免无界拉取）。从 `codeup` 进入时用主操作直接 `launchCommand` 跳到对应命令。
+`list-repositories` 与 `list-merge-requests` 内部都按页加载所有可见结果（每页 100 条，最多 150 页以避免无界拉取）。Codeup 浏览器快速入口（代码库 / 代码组 / 合并请求）已迁移到 `yunxiao-entry` 的「代码管理」分组。
 
 Codeup 浏览器快速入口（已迁移到 `yunxiao-entry` 的「代码管理」分组）：
 
@@ -135,10 +133,11 @@ Codeup 浏览器快速入口（已迁移到 `yunxiao-entry` 的「代码管理�
 
 ### 3.4 测试计划（`list-test-plans`）
 
-进入 `测试计划` 命令后，先弹出一个「选择项目」表单；选定项目后进入该项目的测试计划列表：
+进入 `测试计划` 命令后直接显示当前组织下所有可见的测试计划，**项目**作为搜索栏右侧下拉中的可选项（默认 `全部项目`）：
 
-- 搜索栏右侧带状态过滤下拉：全部 / 未开始（TODO）/ 进行中（DOING）/ 已完成（DONE）；切换会按官方 ListTestPlan 的 `status` 查询参数重新拉取。
-- 搜索覆盖计划名、计划 ID、状态原值、状态中文、负责人 ID 与项目 ID，大小写不敏感。
+- 项目过滤：搜索栏右侧下拉的 `项目 · 状态` 组合里，第一段是项目（默认 `全部项目`）；选中项目后只拉取该项目的测试计划（请求中带 `projectIdentifier`）。项目下拉内容来源于 `listProjects`，加载失败时只影响项目名显示，列表本身仍可正常按状态过滤。
+- 状态过滤：同一组合下拉的第二段；全部 / 未开始（TODO）/ 进行中（DOING）/ 已完成（DONE）；切换会按官方 ListTestPlan 的 `status` 查询参数重新拉取。
+- 搜索覆盖计划名、计划 ID、状态原值、状态中文、负责人 ID、项目 ID 与项目名（解析自下拉里的项目），大小写不敏感。
 - 选中计划 → 「在 Testhub 中打开」跳转到 `https://devops.aliyun.com/testhub/plan/{plan_id}/dashboard`；「复制计划 ID」把 `testPlanIdentifier` 写入剪贴板。
 - 底层走 `POST /oapi/v1/projex/organizations/{orgId}/testPlan/list`（Region 版去掉 `organizations/{orgId}/` 段），参数通过 query 传递：`page`、`perPage`、`projectIdentifier`、`sprintIdentifier?`、`status?`、`name?`。分页信息通过响应头 `x-page` / `x-per-page` / `x-total` / `x-next-page` / `x-total-pages` 携带；本命令一次拉一页（默认 `perPage=200`，官方上限 1000）。
 

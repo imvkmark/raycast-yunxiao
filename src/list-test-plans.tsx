@@ -1,17 +1,18 @@
 /**
  * 测试计划列表命令（list-test-plans）。
  *
- * 流程：
- *   1. 进入时弹出「选择项目」表单；
- *   2. 选定项目后进入 TestPlansView 列出该项目的测试计划；
- *   3. 搜索栏右侧提供状态过滤下拉（全部 / TODO / DOING / DONE）；
- *   4. 选中计划后可在 Testhub 中打开，或复制计划 ID。
+ * 进入命令后直接展示当前组织下所有可见的测试计划（在前后端都不过滤项目）；
+ * 用户可在搜索栏右侧的两个下拉里进一步按「项目」「状态」筛选。
+ *
+ * 项目列表与测试计划列表是两次独立的网络拉取：
+ *   - 项目列表用于构造项目下拉，过滤失败时仍允许按测试计划列表自己的过滤展示；
+ *   - 测试计划列表是命令主体，使用当前项目 + 状态过滤调用 `listTestPlans`。
  *
  * 错误展示策略与 `list-projects.tsx` / `list-repositories.tsx` 一致：
  * toast 只显示一行短因，详情保留在 EmptyView + 「复制错误详情」动作里。
  */
 
-import { Action, ActionPanel, Form, Icon, List, Toast, showToast, useNavigation } from "@raycast/api";
+import { Action, ActionPanel, Icon, List, Toast, showToast } from "@raycast/api";
 import { useEffect, useMemo, useState } from "react";
 import { resolveCredentials } from "./api/client";
 import { listProjects } from "./api/projects";
@@ -63,15 +64,29 @@ function toErrorDetails(err: unknown): ErrorDetails {
     return { brief, details: lines.join("\n") };
 }
 
-const STATUS_OPTIONS: { value: TestPlanStatus | "ALL"; title: string }[] = [
-    { value: "ALL", title: "全部" },
+const PROJECT_ALL = "__ALL__";
+const STATUS_ALL = "ALL";
+/** 联合 dropdown 的项目 / 状态分隔符；取值中不会出现的字符 */
+const FILTER_DELIMITER = "|";
+
+function combineFilter(project: string, status: TestPlanStatus | typeof STATUS_ALL): string {
+    return `${project}${FILTER_DELIMITER}${status}`;
+}
+
+function parseFilter(raw: string): { project: string; status: TestPlanStatus | typeof STATUS_ALL } {
+    const [project = PROJECT_ALL, status = STATUS_ALL] = raw.split(FILTER_DELIMITER);
+    return { project, status: status as TestPlanStatus | typeof STATUS_ALL };
+}
+
+const STATUS_OPTIONS: { value: TestPlanStatus | typeof STATUS_ALL; title: string }[] = [
+    { value: STATUS_ALL, title: "全部状态" },
     { value: "TODO", title: "未开始" },
     { value: "DOING", title: "进行中" },
     { value: "DONE", title: "已完成" },
 ];
 
-function statusFilterValue(value: TestPlanStatus | "ALL"): TestPlanStatus | undefined {
-    return value === "ALL" ? undefined : value;
+function statusFilterValue(value: TestPlanStatus | typeof STATUS_ALL): TestPlanStatus | undefined {
+    return value === STATUS_ALL ? undefined : value;
 }
 
 function statusTitle(value: string | undefined): string {
@@ -87,15 +102,23 @@ function statusTitle(value: string | undefined): string {
     }
 }
 
-/* ---------- Root command ---------- */
+function projectDisplayName(project: Project | undefined): string | undefined {
+    if (!project) return undefined;
+    return project.name ?? project.identifier ?? project.id;
+}
 
 export default function ListTestPlans() {
-    const { push } = useNavigation();
-    const [projects, setProjects] = useState<Project[] | null>(null);
-    const [error, setError] = useState<string>();
-    const [errorDetails, setErrorDetails] = useState<string>();
-    const [selectedProjectId, setSelectedProjectId] = useState<string>("");
+    const [plans, setPlans] = useState<TestPlan[] | null>(null);
+    const [projects, setProjects] = useState<Project[]>([]);
+    const [projectsError, setProjectsError] = useState<ErrorDetails>();
 
+    const [plansError, setPlansError] = useState<ErrorDetails>();
+    const [search, setSearch] = useState("");
+    const [projectFilter, setProjectFilter] = useState<string>(PROJECT_ALL);
+    const [statusFilter, setStatusFilter] = useState<TestPlanStatus | typeof STATUS_ALL>(STATUS_ALL);
+    const [reloadKey, setReloadKey] = useState(0);
+
+    // 项目列表用于构造下拉与「项目 ID → 项目名」映射；不阻塞测试计划列表的展示
     useEffect(() => {
         let cancelled = false;
         (async () => {
@@ -103,15 +126,10 @@ export default function ListTestPlans() {
                 const items = await listProjects({ perPage: 200 });
                 if (cancelled) return;
                 setProjects(items);
-                if (items.length === 0) {
-                    setError("当前组织下没有可访问的项目。");
-                }
             } catch (err) {
                 if (cancelled) return;
                 const { brief, details } = toErrorDetails(err);
-                setError(brief);
-                setErrorDetails(details);
-                await showToast({ style: Toast.Style.Failure, title: "加载项目失败", message: brief });
+                setProjectsError({ brief, details });
             }
         })();
         return () => {
@@ -119,178 +137,171 @@ export default function ListTestPlans() {
         };
     }, []);
 
-    // 项目准备好且只剩一个时，自动选中以减少一步操作
+    // 测试计划列表：项目 + 状态过滤变化时重新拉取
     useEffect(() => {
-        if (!projects || projects.length === 0) return;
-        if (projects.length === 1 && !selectedProjectId) {
-            setSelectedProjectId(projects[0].id);
-        }
-    }, [projects, selectedProjectId]);
-
-    if (error && (!projects || projects.length === 0)) {
-        return (
-            <List>
-                <List.EmptyView
-                    icon={Icon.ExclamationMark}
-                    title="无法加载项目"
-                    description={error}
-                    actions={
-                        <ActionPanel>
-                            <Action.CopyToClipboard
-                                title="复制错误详情"
-                                content={errorDetails ?? error}
-                                shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}
-                            />
-                        </ActionPanel>
-                    }
-                />
-            </List>
-        );
-    }
-
-    if (!projects) {
-        return <List isLoading={true} searchBarPlaceholder="加载项目中…" />;
-    }
-
-    function submit(projectId: string) {
-        if (!projectId) return;
-        const project = projects?.find((p) => p.id === projectId);
-        if (!project) return;
-        push(<TestPlansView projectId={project.id} projectName={project.name ?? project.identifier ?? project.id} />);
-    }
-
-    return (
-        <Form
-            actions={
-                <ActionPanel>
-                    <Action.SubmitForm
-                        title="查看测试计划"
-                        onSubmit={(values: { projectId: string }) => submit(values.projectId)}
-                    />
-                </ActionPanel>
-            }
-        >
-            <Form.Dropdown id="projectId" title="选择项目" value={selectedProjectId} onChange={setSelectedProjectId}>
-                {projects.map((p) => (
-                    <Form.Dropdown.Item key={p.id} value={p.id} title={p.name ?? p.identifier ?? p.id} />
-                ))}
-            </Form.Dropdown>
-        </Form>
-    );
-}
-
-/* ---------- TestPlans sub-view ---------- */
-
-interface TestPlansViewProps {
-    projectId: string;
-    projectName: string;
-}
-
-function TestPlansView({ projectId, projectName }: TestPlansViewProps) {
-    const [plans, setPlans] = useState<TestPlan[] | null>(null);
-    const [error, setError] = useState<string>();
-    const [errorDetails, setErrorDetails] = useState<string>();
-    const [search, setSearch] = useState("");
-    const [statusFilter, setStatusFilter] = useState<TestPlanStatus | "ALL">("ALL");
-
-    function load() {
-        setPlans(null);
-        setError(undefined);
-        setErrorDetails(undefined);
         const controller = new AbortController();
+        setPlans(null);
+        setPlansError(undefined);
         void listTestPlans({
-            projectId,
+            projectId: projectFilter === PROJECT_ALL ? null : projectFilter,
             status: statusFilterValue(statusFilter),
             signal: controller.signal,
         })
             .then((items) => {
+                if (controller.signal.aborted) return;
                 setPlans(items);
             })
             .catch(async (reason) => {
                 if (controller.signal.aborted) return;
                 const { brief, details } = toErrorDetails(reason);
-                setError(brief);
-                setErrorDetails(details);
+                const next: ErrorDetails = { brief, details };
+                setPlansError(next);
                 await showToast({ style: Toast.Style.Failure, title: "加载测试计划失败", message: brief });
             });
-        return controller;
-    }
-
-    useEffect(() => {
-        const controller = load();
         return () => controller.abort();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [projectId, statusFilter]);
+    }, [projectFilter, statusFilter, reloadKey]);
 
-    const statusOption = STATUS_OPTIONS.find((option) => option.value === statusFilter) ?? STATUS_OPTIONS[0];
+    const projectIndex = useMemo(() => {
+        const map = new Map<string, Project>();
+        for (const project of projects) map.set(project.id, project);
+        return map;
+    }, [projects]);
+
+    const projectOptions = useMemo(() => {
+        const sorted = [...projects].sort((a, b) => projectDisplayName(a)?.localeCompare(projectDisplayName(b) ?? "") ?? 0);
+        return [
+            { value: PROJECT_ALL, title: "全部项目" },
+            ...sorted.map((project) => ({
+                value: project.id,
+                title: projectDisplayName(project) ?? project.id,
+            })),
+        ];
+    }, [projects]);
+
+    const statusOption =
+        STATUS_OPTIONS.find((option) => option.value === statusFilter) ?? STATUS_OPTIONS[0];
 
     const normalized = search.trim().toLocaleLowerCase();
     const filtered = useMemo(() => {
         const rows = plans ?? [];
         if (!normalized) return rows;
-        return rows.filter((plan) =>
-            [plan.name, plan.id, plan.status, plan.projectId, plan.ownerId]
+        return rows.filter((plan) => {
+            const projectName = plan.projectId ? projectDisplayName(projectIndex.get(plan.projectId)) : undefined;
+            const haystack = [
+                plan.name,
+                plan.id,
+                plan.status,
+                plan.projectId,
+                plan.ownerId,
+                projectName,
+            ]
                 .filter((value): value is string => Boolean(value))
-                .some((value) => value.toLocaleLowerCase().includes(normalized)),
-        );
-    }, [plans, normalized]);
+                .map((value) => value.toLocaleLowerCase());
+            return haystack.some((value) => value.includes(normalized));
+        });
+    }, [plans, normalized, projectIndex]);
+
+    function reload() {
+        setReloadKey((value) => value + 1);
+    }
+
+    const projectFilterLabel =
+        projectFilter === PROJECT_ALL
+            ? "全部项目"
+            : projectOptions.find((option) => option.value === projectFilter)?.title ?? projectFilter;
+
+    const isLoading = plans === null && !plansError;
 
     return (
         <List
-            isLoading={plans === null && !error}
+            isLoading={isLoading}
             filtering={false}
             onSearchTextChange={setSearch}
-            searchBarPlaceholder={`搜索 ${projectName} 的测试计划…`}
+            searchBarPlaceholder={`搜索测试计划…`}
             searchBarAccessory={
                 <List.Dropdown
-                    tooltip="测试计划状态"
-                    value={statusFilter}
-                    onChange={(value) => setStatusFilter(value as TestPlanStatus | "ALL")}
+                    tooltip="项目 + 状态过滤"
+                    storeValue={true}
+                    value={combineFilter(projectFilter, statusFilter)}
+                    onChange={(raw) => {
+                        const { project, status } = parseFilter(raw);
+                        setProjectFilter(project || PROJECT_ALL);
+                        setStatusFilter(status || STATUS_ALL);
+                    }}
                 >
-                    {STATUS_OPTIONS.map((option) => (
-                        <List.Dropdown.Item key={option.value} value={option.value} title={option.title} />
-                    ))}
+                    {projectOptions.map((projectOption) =>
+                        STATUS_OPTIONS.map((statusOption) => (
+                            <List.Dropdown.Item
+                                key={combineFilter(projectOption.value, statusOption.value)}
+                                value={combineFilter(projectOption.value, statusOption.value)}
+                                title={`${projectOption.title} · ${statusOption.title}`}
+                            />
+                        )),
+                    )}
                 </List.Dropdown>
             }
         >
             <List.EmptyView
-                icon={error ? Icon.ExclamationMark : Icon.Bug}
+                icon={plansError ? Icon.ExclamationMark : Icon.Bug}
                 title={
-                    error
+                    plansError
                         ? "无法加载测试计划"
-                        : plans?.length
+                        : filtered.length === 0 && plans?.length
                           ? "没有匹配项"
-                          : `暂无${statusOption.title === "全部" ? "" : statusOption.title}测试计划`
+                          : isLoading
+                            ? "加载测试计划…"
+                            : projectFilter === PROJECT_ALL
+                              ? "暂无测试计划"
+                              : `该项目暂无测试计划`
                 }
-                description={error ?? (plans?.length ? "尝试其他搜索关键词。" : "在 Testhub 创建测试计划后回来查看。")}
+                description={
+                    plansError?.brief ??
+                    (filtered.length === 0 && plans?.length
+                        ? "尝试切换项目 / 状态过滤或换个搜索关键词。"
+                        : "在 Testhub 创建测试计划后回来查看。")
+                }
                 actions={
-                    error && errorDetails ? (
+                    plansError?.details ? (
                         <ActionPanel>
-                            <Action title="重新加载" icon={Icon.ArrowClockwise} onAction={() => load()} />
+                            <Action title="重新加载" icon={Icon.ArrowClockwise} onAction={reload} />
                             <Action.CopyToClipboard
                                 title="复制错误详情"
-                                content={errorDetails}
+                                content={plansError.details}
                                 shortcut={{ modifiers: ["cmd", "shift"], key: "c" }}
                             />
                         </ActionPanel>
                     ) : undefined
                 }
             />
-            <List.Section title={`测试计划 / ${projectName}（${statusOption.title}）`}>
+            <List.Section title={`测试计划 / ${projectFilterLabel}（${statusOption.title}）`}>
                 {filtered.map((plan) => {
-                    const accessories: Array<{ tag?: string; text?: string }> = [{ tag: statusTitle(plan.status) }];
+                    const projectName = plan.projectId ? projectDisplayName(projectIndex.get(plan.projectId)) : undefined;
+                    const subtitleParts: string[] = [];
+                    if (projectName && projectFilter === PROJECT_ALL) subtitleParts.push(projectName);
+                    subtitleParts.push(plan.id);
+                    const accessories: Array<{ tag?: string; text?: string }> = [
+                        { tag: statusTitle(plan.status) },
+                    ];
                     if (plan.createdAt) accessories.push({ text: plan.createdAt.slice(0, 10) });
                     return (
                         <List.Item
                             key={plan.id}
                             icon={Icon.Bug}
                             title={plan.name || `(未命名) ${plan.id}`}
-                            subtitle={plan.id}
+                            subtitle={subtitleParts.join(" · ")}
                             accessories={accessories}
                             actions={
                                 <ActionPanel>
                                     <Action.OpenInBrowser title="在 Testhub 中打开" url={testPlanUrl(plan.id)} />
                                     <Action.CopyToClipboard title="复制计划 ID" content={plan.id} />
+                                    {projectFilter === PROJECT_ALL && projectsError?.details ? (
+                                        <Action.CopyToClipboard
+                                            title="复制项目列表错误详情"
+                                            content={projectsError.details}
+                                            shortcut={{ modifiers: ["cmd", "shift"], key: "p" }}
+                                        />
+                                    ) : null}
                                 </ActionPanel>
                             }
                         />

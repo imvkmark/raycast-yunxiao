@@ -97,16 +97,8 @@
 
 ### 顶层命令
 
-- [x] 代码管理 (`codeup`) : 总览页，聚合代码库与合并请求命令入口
 - [x] 代码库 (`list-repositories`) : 列出我参与的所有代码库，支持本地搜索 + 回车跳转
 - [x] 合并请求 (`list-merge-requests`) : 列出合并请求，支持按开启 / 已合并 / 已关闭 状态筛选
-
-### Sections（`codeup` 总览页）
-
-**「Section 1」我的项目**
-
-- [x] 代码库 (命令跳转) → `list-repositories`
-- [x] 合并请求 (命令跳转) → `list-merge-requests`
 
 > Codeup 浏览器快速入口（代码库 / 代码组 / 合并请求）已迁移到 `yunxiao-entry` 的「代码管理」分组，避免重复入口。
 
@@ -118,14 +110,13 @@
 
 ### 顶层命令
 
-- [x] 测试计划 (`list-test-plans`) : 选择项目后列出测试计划，支持 TODO / DOING / DONE 状态过滤；回车在 Testhub 中打开 `https://devops.aliyun.com/testhub/plan/{plan_id}/dashboard`；附「复制计划 ID」动作。
+- [x] 测试计划 (`list-test-plans`) : 进入命令后直接列出当前组织所有可见测试计划；搜索栏右侧 `项目 · 状态` 组合下拉可按项目 / TODO / DOING / DONE 进一步过滤；回车在 Testhub 中打开 `https://devops.aliyun.com/testhub/plan/{plan_id}/dashboard`；附「复制计划 ID」动作。
 
 ### Sections
 
-**「Section 1」按项目分组**
+**「Section 1」按状态分组**
 
-- [x] 选择项目（Form 下拉，单项目时自动选中）
-- [x] 测试计划列表（状态过滤下拉 / 本地搜索：名称、ID、状态原值、状态中文、负责人 ID、项目 ID）
+- [x] 测试计划列表（`项目 · 状态` 组合下拉：项目过滤默认 `全部项目`；状态过滤：全部 / TODO / DOING / DONE / 本地搜索：名称、ID、状态原值、状态中文、负责人 ID、项目 ID、项目名）
 - [x] 操作：在 Testhub 中打开、复制计划 ID
 
 **「Section 2」项目列表内嵌入口（`list-projects`）**
