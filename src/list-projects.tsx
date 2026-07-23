@@ -12,7 +12,6 @@
 import {
   Action,
   ActionPanel,
-  Detail,
   Icon,
   List,
   Toast,
@@ -33,7 +32,7 @@ import {
   type WorkitemCategory,
 } from "./api/types";
 import { listWorkitems } from "./api/workitems";
-import { categoryLabel, renderWorkitemMarkdown } from "./utils/format";
+import { categoryLabel } from "./utils/format";
 import {
   projectCategoryUrl,
   projectUrl,
@@ -339,13 +338,21 @@ function SprintsView({ projectId, projectName }: SprintsViewProps) {
       <List.Section title={`迭代 / ${projectName}`}>
         {items.map((s) => {
           const range = s.startDate && s.endDate ? `${s.startDate.slice(0, 10)} → ${s.endDate.slice(0, 10)}` : "-";
+          const ownerNames = s.owners
+            ?.map((owner) => owner.name ?? owner.id)
+            .filter((value): value is string => Boolean(value))
+            .join("、");
           return (
             <List.Item
               key={s.id}
               icon={Icon.Calendar}
               title={s.name ?? "(未命名迭代)"}
               subtitle={s.id}
-              accessories={[{ tag: s.status ?? "-" }, { text: range }]}
+              accessories={[
+                { tag: s.status ?? "-" },
+                { text: range },
+                ...(ownerNames ? [{ tag: ownerNames }] : []),
+              ]}
               actions={
                 <ActionPanel>
                   <Action.OpenInBrowser title="访问该迭代" url={sprintUrl(projectId, s.id)} />
@@ -437,7 +444,6 @@ interface WorkitemsViewProps {
 }
 
 function WorkitemsView({ projectId, projectName }: WorkitemsViewProps) {
-  const { push } = useNavigation();
   const [category, setCategory] = useState<CategoryFilter>(ALL_CATEGORY_VALUE);
   const [items, setItems] = useState<Workitem[]>([]);
   const [searchText, setSearchText] = useState("");
@@ -445,10 +451,6 @@ function WorkitemsView({ projectId, projectName }: WorkitemsViewProps) {
   const [error, setError] = useState<string | undefined>();
   const [reloadGeneration, setReloadGeneration] = useState(0);
   const requestGeneration = useRef(0);
-
-  function openWorkitem(item: Workitem) {
-    push(<WorkitemDetailView workitem={item} fallbackProjectId={projectId} />);
-  }
 
   useEffect(() => {
     const generation = ++requestGeneration.current;
@@ -529,13 +531,13 @@ function WorkitemsView({ projectId, projectName }: WorkitemsViewProps) {
       />
       <List.Section title={`${projectName} · ${titleSuffix}`}>
         {filteredItems.map((workitem) => {
-          const browserUrl = workitemUrl(workitem.projectId ?? projectId, workitem.category, workitem.id);
+          const browserUrl = workitemUrl(projectId, workitem.categoryId, workitem.id);
           return (
             <List.Item
               key={workitem.id}
               icon={iconForCategory(workitem.category)}
               title={workitem.subject ?? "(无标题)"}
-              subtitle={workitem.identifier ?? workitem.id}
+              subtitle={workitem.serialNumber}
               accessories={[
                 { tag: { value: workitem.category ? categoryLabel(workitem.category) : "-", color: undefined } },
                 { text: workitem.assignee?.name ?? "未指派" },
@@ -543,9 +545,8 @@ function WorkitemsView({ projectId, projectName }: WorkitemsViewProps) {
               ]}
               actions={
                 <ActionPanel>
-                  <Action title="查看详情" icon={Icon.Eye} onAction={() => openWorkitem(workitem)} />
-                  <Action.CopyToClipboard title="复制工作项 ID" content={workitem.id} />
                   {browserUrl ? <Action.OpenInBrowser title="在云效中打开" url={browserUrl} /> : null}
+                  <Action.CopyToClipboard title="复制工作项 ID" content={workitem.serialNumber} />
                 </ActionPanel>
               }
             />
@@ -577,34 +578,8 @@ function iconForCategory(category: WorkitemCategory | string | undefined): Icon 
 
 /* ---------- Workitem detail (inline) ---------- */
 
-interface WorkitemDetailViewProps {
-  workitem: Workitem;
-  /** 当 workitem.projectId 缺失时使用的回退项目 id */
-  fallbackProjectId: string;
-}
-
-function WorkitemDetailView({ workitem, fallbackProjectId }: WorkitemDetailViewProps) {
-  const markdown = renderWorkitemMarkdown(workitem);
-  const navigationTitle = workitem.identifier ?? workitem.id;
-  const browserUrl = workitemUrl(workitem.projectId ?? fallbackProjectId, workitem.category, workitem.id);
-
-  return (
-    <Detail
-      navigationTitle={navigationTitle}
-      markdown={markdown}
-      actions={
-        <ActionPanel>
-          <Action.CopyToClipboard title="复制工作项 ID" content={workitem.id} />
-          <Action.CopyToClipboard title="复制 JSON" content={JSON.stringify(workitem, null, 2)} />
-          <Action.CopyToClipboard title="复制详情为 Markdown" content={markdown} />
-          {browserUrl ? <Action.OpenInBrowser title="在云效中打开" url={browserUrl} /> : null}
-          <Action.OpenInBrowser
-            icon={Icon.Book}
-            title="开发文档"
-            url="https://help.aliyun.com/document_detail/460575.html"
-          />
-        </ActionPanel>
-      }
-    />
-  );
-}
+/* (removed in this revision: workitem detail was previously exposed via a
+   separate command file, then attempted as an in-command `Detail` view via
+   `push(<WorkitemDetailView ...>)`. Neither surface is reachable from the
+   workitem list today, so the dead component has been removed to keep the
+   command lean. Reintroduce when a click target is wired up.) */

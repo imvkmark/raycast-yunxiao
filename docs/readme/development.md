@@ -16,7 +16,7 @@
 src/
 ├── api/                  # 云效 OpenAPI 客户端
 │   ├── client.ts         # 通用 request 封装 + Raycast 偏好读取 + 错误类
-│   ├── projects.ts       # SearchProjects（POST /oapi/v1/projex/.../projects:search）
+│   ├── projects.ts       # SearchProjects（POST /oapi/v1/projex/.../projects）
 │   ├── sprints.ts        # SearchSprints（POST .../sprints:search）
 │   ├── testplans.ts      # ListTestPlans（POST .../testplans:search）
 │   ├── workitems.ts      # SearchWorkitems
@@ -89,12 +89,12 @@ npm run build             # 等价于 ray build
 > 鉴权头：`x-yunxiao-token: <PAT>`（两种模式通用）
 
 | 操作         | 中心版 path                                                              | Region 版 path                                     | Method | Body                                                      |
-| ------------ | ------------------------------------------------------------------------ | -------------------------------------------------- | ------ | --------------------------------------------------------- |
+| ------------ |--------------------------------------------------------------------------|----------------------------------------------------| ------ | --------------------------------------------------------- |
 | 列出项目     | `/oapi/v1/projex/organizations/{orgId}/projects:search`                  | `/oapi/v1/projex/projects:search`                  | POST   | `{page,perPage,orderBy,sort,conditions?}`                 |
 | 搜索工作项   | `/oapi/v1/projex/organizations/{orgId}/workitems:search`                 | `/oapi/v1/projex/workitems:search`                 | POST   | `{spaceId,spaceType,category?,page,perPage,orderBy,sort}` |
 | 工作项详情   | `/oapi/v1/projex/organizations/{orgId}/workitems/{id}?spaceId={spaceId}` | `/oapi/v1/projex/workitems/{id}?spaceId={spaceId}` | GET    | —                                                         |
-| 列出迭代     | `/oapi/v1/projex/organizations/{orgId}/sprints:search`                   | `/oapi/v1/projex/sprints:search`                   | POST   | `{spaceId,spaceType,page,perPage,orderBy,sort}`           |
-| 列出测试计划 | `/oapi/v1/projex/organizations/{orgId}/testPlan/list`                   | `/oapi/v1/projex/testPlan/list`                    | POST   | query: `{page,perPage,projectIdentifier?,sprintIdentifier?,status?,name?}` |
+| 列出迭代     | `/oapi/v1/projex/organizations/{orgId}/projects/{id}/sprints`            | `/oapi/v1/projex/projects/{id}/sprints`            | GET    | query: `{page,perPage,status?,name?}`（status 取值：TODO / DOING / ARCHIVED，多选用逗号分隔） |
+| 列出测试计划 | `/oapi/v1/projex/organizations/{orgId}/testPlan/list`                    | `/oapi/v1/projex/testPlan/list`                    | POST   | query: `{page,perPage,projectIdentifier?,sprintIdentifier?,status?,name?}` |
 
 | 列出代码库 | `/oapi/v1/codeup/organizations/{orgId}/repositories` | `/oapi/v1/codeup/repositories` | GET | `{page,perPage,orderBy,sort,search?,archived?}` |
 | 查询合并请求 | `/oapi/v1/codeup/organizations/{orgId}/changeRequests` | `/oapi/v1/codeup/changeRequests` | GET | `{page,perPage,projectIds?,authorIds?,reviewerIds?,state=opened,search?,orderBy,sort,createdAfter?,createdBefore?}`（state 取值：opened / merged / closed，默认 opened） |
