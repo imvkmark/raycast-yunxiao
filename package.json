@@ -60,21 +60,17 @@
     ],
     "commands": [
         {
-            "name": "menu",
-            "title": "云效",
-            "description": "云效一站式入口：项目、任务、代码、测试。",
-            "mode": "view"
-        },
-        {
             "name": "yunxiao-entry",
             "title": "Yunxiao Entry",
             "description": "工作台 / 项目协作 / 测试管理 / 代码管理 / 制品仓库 / 企业管理后台 / 个人设置 一键直达。",
+            "icon": "icon.png",
             "mode": "view"
         },
         {
-            "name": "my-yunxiao",
-            "title": "我的云效",
-            "description": "快速直达我负责的工作项与我参与的项目视图。",
+            "name": "list-projects",
+            "title": "Project List",
+            "description": "浏览我可访问的云效项目。",
+            "icon": "project.png",
             "mode": "view"
         },
         {
@@ -98,40 +94,17 @@
             ]
         },
         {
-            "name": "list-projects",
-            "title": "项目列表",
-            "description": "浏览我可访问的云效项目。",
-            "mode": "view"
-        },
-        {
-            "name": "get-workitem",
-            "title": "工作项详情",
-            "description": "由任务列表打开，查看工作项的 markdown 详情。",
-            "mode": "view",
-            "arguments": [
-                {
-                    "name": "workitemId",
-                    "type": "text",
-                    "placeholder": "工作项 ID"
-                },
-                {
-                    "name": "projectId",
-                    "type": "text",
-                    "placeholder": "项目 ID (可选)",
-                    "optional": true
-                }
-            ]
-        },
-        {
             "name": "code-overview",
             "title": "代码总览",
             "description": "代码模块总览 (后续版本提供，敬请期待)",
+            "icon": "codeup.png",
             "mode": "view"
         },
         {
             "name": "list-test-plans",
             "title": "测试计划",
             "description": "测试计划命令 (后续版本提供，敬请期待)",
+            "icon": "testhub.png",
             "mode": "view"
         }
     ],

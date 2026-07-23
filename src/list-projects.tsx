@@ -18,7 +18,7 @@ import {
   Toast,
   launchCommand,
   showToast,
-  useNavigation,
+  useNavigation, Keyboard,
 } from "@raycast/api";
 import { useEffect, useState } from "react";
 import { resolveCredentials } from "./api/client";
@@ -126,10 +126,10 @@ export default function ListProjects() {
   const normalizedFilter = filter.trim().toLocaleLowerCase();
   const filtered = normalizedFilter
     ? items.filter((project) =>
-        [project.name, project.identifier]
-          .filter((value): value is string => Boolean(value))
-          .some((value) => value.toLocaleLowerCase().includes(normalizedFilter)),
-      )
+      [project.name, project.identifier]
+        .filter((value): value is string => Boolean(value))
+        .some((value) => value.toLocaleLowerCase().includes(normalizedFilter)),
+    )
     : items;
 
   return (
@@ -166,7 +166,7 @@ export default function ListProjects() {
                 content={
                   "POST {baseUrl}/oapi/v1/projex/organizations/{organizationId}/projects:search\n" +
                   "Header: x-yunxiao-token: <PAT>\n" +
-                  'Body: { "page": 1, "perPage": 50, "orderBy": "gmtCreate", "sort": "desc" }'
+                  "Body: { \"page\": 1, \"perPage\": 50, \"orderBy\": \"gmtCreate\", \"sort\": \"desc\" }"
                 }
               />
             </ActionPanel>

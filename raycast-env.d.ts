@@ -22,18 +22,12 @@ type ExtensionPreferences = {
 declare type Preferences = ExtensionPreferences
 
 declare namespace Preferences {
-  /** Preferences accessible in the `menu` command */
-  export type Menu = ExtensionPreferences & {}
   /** Preferences accessible in the `yunxiao-entry` command */
   export type YunxiaoEntry = ExtensionPreferences & {}
-  /** Preferences accessible in the `my-yunxiao` command */
-  export type MyYunxiao = ExtensionPreferences & {}
-  /** Preferences accessible in the `list-tasks` command */
-  export type ListTasks = ExtensionPreferences & {}
   /** Preferences accessible in the `list-projects` command */
   export type ListProjects = ExtensionPreferences & {}
-  /** Preferences accessible in the `get-workitem` command */
-  export type GetWorkitem = ExtensionPreferences & {}
+  /** Preferences accessible in the `list-tasks` command */
+  export type ListTasks = ExtensionPreferences & {}
   /** Preferences accessible in the `code-overview` command */
   export type CodeOverview = ExtensionPreferences & {}
   /** Preferences accessible in the `list-test-plans` command */
@@ -41,27 +35,16 @@ declare namespace Preferences {
 }
 
 declare namespace Arguments {
-  /** Arguments passed to the `menu` command */
-  export type Menu = {}
   /** Arguments passed to the `yunxiao-entry` command */
   export type YunxiaoEntry = {}
-  /** Arguments passed to the `my-yunxiao` command */
-  export type MyYunxiao = {}
+  /** Arguments passed to the `list-projects` command */
+  export type ListProjects = {}
   /** Arguments passed to the `list-tasks` command */
   export type ListTasks = {
   /** 项目 ID (可留空) */
   "projectId": string,
   /** 类别: Req/Bug/Task/Risk/Request/Topic */
   "category": string
-}
-  /** Arguments passed to the `list-projects` command */
-  export type ListProjects = {}
-  /** Arguments passed to the `get-workitem` command */
-  export type GetWorkitem = {
-  /** 工作项 ID */
-  "workitemId": string,
-  /** 项目 ID (可选) */
-  "projectId": string
 }
   /** Arguments passed to the `code-overview` command */
   export type CodeOverview = {}

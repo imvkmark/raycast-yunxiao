@@ -27,7 +27,6 @@ src/
 │   └── format.ts        # 类别本地化、日期格式化等
 ├── menu.tsx              # 根菜单
 ├── yunxiao-entry.tsx     # 云效门户入口（8 个深链）
-├── my-yunxiao.tsx        # 我的云效（2 个 URL 直跳）
 ├── list-projects.tsx     # 项目列表
 ├── list-tasks.tsx        # 任务列表
 ├── get-workitem.tsx      # 工作项详情
@@ -133,25 +132,7 @@ npm run build             # 等价于 ray build
 
 - 静态 URL 条目使用 `Action.OpenInBrowser`，直接由 Raycast 接管打开。
 - 需要从偏好拼 URL 的条目（例如「企业管理后台」需要 `organizationId`）：把 `url` 留 `null` 并提供 `unavailableMessage`；当偏好缺失时主动作改为 toast 提示用户在偏好中补齐，不要再做项目选择器之类的二级流程。
-- 图标：仅 `package.json` 顶层 `icon` 必须 PNG；列表项 `icon={{ source: "assets/x.svg" }}` 接受 SVG。
-
-### 6.4 新增「我的云效」条目
-
-`src/my-yunxiao.tsx` 是一个**纯 URL 直跳**命令，与 PAT 无关；新增条目只需在 `MY_ITEMS` 数组中追加：
-
-```ts
-{
-  id: "my-workitems",
-  title: "负责的工作项",
-  subtitle: "我负责的全部工作项视图",
-  iconSource: "assets/my.png",
-  url: "https://devops.aliyun.com/projex/workitem",
-  shortcut: { modifiers: ["cmd", "shift"], key: "a" },
-}
-```
-
-- 不调用任何 API,因此不依赖 `resolveCredentials()`；无 PAT 凭据缺失也会跳出提示。
-- 适配到 `menu.tsx` 的 `MENU_ITEMS` 中作为单独一类入口（`icon: Icon.Person`）。
+- 图标：仅 `package.json` 顶层 `icon` 必须 PNG；列表项 `icon={{ source: "assets/x.png" }}` 接受 PNG（PNG 比 SVG 渲染更可靠，建议统一使用 PNG）。
 
 ### 6.4 错误展示约定
 
