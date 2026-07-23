@@ -67,6 +67,7 @@ test("normalizeMergeRequests extracts localId from official docs response", () =
             id: "1",
             localId: 1,
             projectId: 2813489,
+            repositoryPath: undefined,
             title: "mr title",
             state: "UNDER_REVIEW",
             sourceBranch: "demo-branch",
@@ -84,6 +85,18 @@ test("normalizeMergeRequests extracts localId from official docs response", () =
     ]);
 });
 
+test("normalizeMergeRequests captures repository.pathWithNamespace as the canonical URL namespace", () => {
+    const row = {
+        localId: 160,
+        projectId: 42,
+        title: "feat: nested namespace",
+        repository: { pathWithNamespace: "qyd/kjs/kjs4j/kjs-game" },
+    };
+    const [mr] = normalizeMergeRequests([row]);
+    assert.equal(mr?.repositoryPath, "qyd/kjs/kjs4j/kjs-game");
+    assert.equal(mr?.localId, 160);
+});
+
 test("normalizeMergeRequests handles envelope and skips rows missing localId", () => {
     const row = { localId: 7, title: "ok", projectId: 42 };
     assert.deepEqual(normalizeMergeRequests({ result: [row] }), [
@@ -91,6 +104,7 @@ test("normalizeMergeRequests handles envelope and skips rows missing localId", (
             id: "7",
             localId: 7,
             projectId: 42,
+            repositoryPath: undefined,
             title: "ok",
             state: undefined,
             sourceBranch: undefined,

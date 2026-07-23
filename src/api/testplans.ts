@@ -12,8 +12,9 @@
  * 即便使用 POST 方法 body 也是空的。
  *
  * 响应是裸数组 [TestPlan, ...]，字段包括 testPlanIdentifier / name / status /
- * gmtCreate / managers / spaceIdentifier。分页信息通过响应头
- * （x-page、x-per-page、x-total、x-next-page、x-total-pages）携带。
+ * gmtCreate / managers / spaceIdentifier；实际响应还可能携带起止时间字段
+ * （gmtStart/gmtEnd 等多种命名），由 normalize 层归一化。
+ * 分页信息通过响应头（x-page、x-per-page、x-total、x-next-page、x-total-pages）携带。
  *
  * 状态过滤值：TODO / DOING / DONE（多选用逗号分隔，如 DOING,DONE）。
  */

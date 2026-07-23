@@ -15,6 +15,8 @@ export interface MergeRequest {
     id: string;
     localId?: number;
     projectId?: number;
+    /** 仓库命名空间路径，例如 `qyd/kjs/kjs4j/kjs-game`；用于构造 fallback URL */
+    repositoryPath?: string;
     title?: string;
     state?: string;
     sourceBranch?: string;
@@ -78,11 +80,16 @@ export function normalizeMergeRequests(response: unknown): MergeRequest[] {
         if (localId === undefined) return [];
         const author =
             value.author && typeof value.author === "object" ? (value.author as Record<string, unknown>) : undefined;
+        const repository =
+            value.repository && typeof value.repository === "object"
+                ? (value.repository as Record<string, unknown>)
+                : undefined;
         return [
             {
                 id: String(localId),
                 localId,
                 projectId: numberValue(value.projectId),
+                repositoryPath: repository ? stringValue(repository.pathWithNamespace) : undefined,
                 title: stringValue(value.title),
                 state: stringValue(value.state),
                 sourceBranch: stringValue(value.sourceBranch),

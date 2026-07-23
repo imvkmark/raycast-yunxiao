@@ -7,6 +7,8 @@ test("normalizeTestPlans maps official ListTestPlan fields to canonical TestPlan
     const rows = [
         {
             gmtCreate: "2024-10-05T15:30:45Z",
+            gmtStart: "2024-10-01T00:00:00Z",
+            gmtEnd: "2024-10-31T23:59:59Z",
             managers: ["user-1", "user-2"],
             name: "回归测试",
             spaceIdentifier: "PROJ-1",
@@ -24,6 +26,8 @@ test("normalizeTestPlans maps official ListTestPlan fields to canonical TestPlan
             ownerId: "user-1",
             managerIds: ["user-1", "user-2"],
             createdAt: "2024-10-05T15:30:45Z",
+            startTime: "2024-10-01T00:00:00Z",
+            endTime: "2024-10-31T23:59:59Z",
         },
     ]);
 });
@@ -57,6 +61,8 @@ test("normalizeTestPlans tolerates missing optional fields", () => {
             ownerId: undefined,
             managerIds: [],
             createdAt: undefined,
+            startTime: undefined,
+            endTime: undefined,
         },
     ]);
 });
@@ -79,6 +85,8 @@ test("normalizeTestPlans skips non-object rows", () => {
             ownerId: undefined,
             managerIds: [],
             createdAt: undefined,
+            startTime: undefined,
+            endTime: undefined,
         },
     ]);
 });
@@ -94,6 +102,26 @@ test("normalizeTestPlans accepts numeric identifiers as strings", () => {
             ownerId: undefined,
             managerIds: [],
             createdAt: undefined,
+            startTime: undefined,
+            endTime: undefined,
         },
     ]);
+});
+
+test("normalizeTestPlans falls back across startTime/startDate/start aliases", () => {
+    const rows = [
+        { testPlanIdentifier: "tp-1", startTime: "2024-10-02" },
+        { testPlanIdentifier: "tp-2", startDate: "2024-10-03" },
+        { testPlanIdentifier: "tp-3", start: "2024-10-04" },
+        { testPlanIdentifier: "tp-4", gmtStart: "2024-10-05", gmtEnd: "2024-10-15" },
+        { testPlanIdentifier: "tp-5" },
+    ];
+    const [a, b, c, d, e] = normalizeTestPlans(rows);
+    assert.equal(a?.startTime, "2024-10-02");
+    assert.equal(b?.startTime, "2024-10-03");
+    assert.equal(c?.startTime, "2024-10-04");
+    assert.equal(d?.startTime, "2024-10-05");
+    assert.equal(d?.endTime, "2024-10-15");
+    assert.equal(e?.startTime, undefined);
+    assert.equal(e?.endTime, undefined);
 });

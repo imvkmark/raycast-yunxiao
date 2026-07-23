@@ -99,6 +99,10 @@ export interface TestPlan {
     ownerId?: string;
     /** ISO 创建时间（官方返回的 gmtCreate） */
     createdAt?: string;
+    /** 计划开始时间（归一化自 gmtStart / startTime / startDate） */
+    startTime?: string;
+    /** 计划结束时间（归一化自 gmtEnd / endTime / endDate） */
+    endTime?: string;
     /** 全部负责人 id（官方返回的 managers） */
     managerIds?: string[];
 }

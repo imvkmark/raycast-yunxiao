@@ -102,6 +102,21 @@ function statusTitle(value: string | undefined): string {
     }
 }
 
+/** 把 ISO 时间截到日；非字符串原样返回。 */
+function dateOnly(value: string | undefined): string | undefined {
+    return typeof value === "string" && value.length >= 10 ? value.slice(0, 10) : undefined;
+}
+
+/** "开始 - 结束"；任一缺失时回退到另一个或创建时间，最后降级为 "-" */
+function planTimeRange(plan: TestPlan): string {
+    const start = dateOnly(plan.startTime);
+    const end = dateOnly(plan.endTime);
+    if (start && end) return `${start} - ${end}`;
+    if (start) return `${start} -`;
+    if (end) return `- ${end}`;
+    return dateOnly(plan.createdAt) ?? "-";
+}
+
 function projectDisplayName(project: Project | undefined): string | undefined {
     if (!project) return undefined;
     return project.name ?? project.identifier ?? project.id;
@@ -202,6 +217,34 @@ export default function ListTestPlans() {
         });
     }, [plans, normalized, projectIndex]);
 
+    // 全部状态时按各状态计数；与 STATUS_OPTIONS 顺序保持一致，未知状态聚合到尾部
+    const statusBreakdown = useMemo(() => {
+        const rows = plans ?? [];
+        const counts = new Map<string, number>();
+        for (const plan of rows) {
+            const key = plan.status ?? "";
+            counts.set(key, (counts.get(key) ?? 0) + 1);
+        }
+        const known: { title: string; value: string; count: number }[] = STATUS_OPTIONS
+            .filter((option) => option.value !== STATUS_ALL)
+            .map((option) => ({
+                title: option.title,
+                value: option.value,
+                count: counts.get(option.value) ?? 0,
+            }));
+        const knownValues = new Set(known.map((entry) => entry.value));
+        const unknown: { title: string; value: string; count: number }[] = Array.from(counts.entries())
+            .filter(([key]) => key && !knownValues.has(key))
+            .map(([key, count]) => ({ title: key, value: key, count }));
+        return known.concat(unknown);
+    }, [plans]);
+
+    const statusTitleText = useMemo(() => {
+        if (statusFilter !== STATUS_ALL) return statusOption.title;
+        const parts = statusBreakdown.map((entry) => `${entry.title} ${entry.count}`);
+        return parts.length > 0 ? `全部状态 · ${parts.join(" · ")}` : "全部状态";
+    }, [statusFilter, statusBreakdown, statusOption.title]);
+
     function reload() {
         setReloadKey((value) => value + 1);
     }
@@ -274,7 +317,7 @@ export default function ListTestPlans() {
                     ) : undefined
                 }
             />
-            <List.Section title={`测试计划 / ${projectFilterLabel}（${statusOption.title}）`}>
+            <List.Section title={`测试计划 / ${projectFilterLabel}（${statusTitleText}）`}>
                 {filtered.map((plan) => {
                     const projectName = plan.projectId ? projectDisplayName(projectIndex.get(plan.projectId)) : undefined;
                     const subtitleParts: string[] = [];
@@ -283,7 +326,7 @@ export default function ListTestPlans() {
                     const accessories: Array<{ tag?: string; text?: string }> = [
                         { tag: statusTitle(plan.status) },
                     ];
-                    if (plan.createdAt) accessories.push({ text: plan.createdAt.slice(0, 10) });
+                    accessories.push({ text: planTimeRange(plan) });
                     return (
                         <List.Item
                             key={plan.id}
