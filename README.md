@@ -6,10 +6,10 @@
 
 - **云效入口**（`Yunxiao`）—— 一键直达工作台、项目协作、测试管理、代码管理（Codeup）、制品仓库、企业管理后台与个人设置；除企业管理后台依赖 `Organization Id` 偏好外，其余均为静态深链，无网络请求。
 - **项目列表**（`Project List`）—— 列出当前 organization 下可访问的项目，支持关键字筛选。每个项目上可展开：
-  - **查看工作项**：按类别（全部 / 需求 / 任务 / 缺陷 / 主题 / 原始诉求 / 风险）筛选 + 本地搜索，回车在云效中打开；
-  - **查看迭代**：列出 TODO / DOING 状态的迭代，显示起止时间（`YYYY-MM-DD`）与负责人；
-  - **查看测试计划**：跳转到全组织测试计划列表；
-  - **概览 / 各类别 / 迭代 Backlog / 测试计划列表** 等一键深链。
+    - **查看工作项**：按类别（全部 / 需求 / 任务 / 缺陷 / 主题 / 原始诉求 / 风险）筛选 + 本地搜索，回车在云效中打开；
+    - **查看迭代**：列出 TODO / DOING 状态的迭代，显示起止时间（`YYYY-MM-DD`）与负责人；
+    - **查看测试计划**：跳转到全组织测试计划列表；
+    - **概览 / 各类别 / 迭代 Backlog / 测试计划列表** 等一键深链。
 - **代码库**（`List Repositories`）—— 列出当前组织下可访问的代码库，支持名称 / 路径 / 命名空间本地搜索，回车在 Codeup 中打开；显示最近活动日期。
 - **合并请求**（`List Merge Requests`）—— 按状态（开启 / 已合并 / 已关闭）筛选合并请求（默认开启），支持标题 / 仓库 / 分支 / 作者本地搜索，显示 `sourceBranch → targetBranch` 与作者。
 - **测试计划**（`Search Test Plan`）—— 直接展示当前 organization 下所有可见的测试计划（前后端均不过滤项目），按状态（全部 / 未开始 / 进行中 / 已完成）筛选（默认 DOING），显示状态、起止时间、项目名。
@@ -29,14 +29,13 @@
 
 ## 命令清单
 
-| 命令名                  | Raycast 入口        | 行为                                                                       |
-| ----------------------- | ------------------- | -------------------------------------------------------------------------- |
-| `yunxiao-entry`         | `Yunxiao`           | 多门户深链（工作台 / 项目 / 测试 / Codeup / 制品库 / 企业管理后台 / 设置）。 |
-| `list-projects`         | `Project List`      | 浏览项目 → 工作项 / 迭代 / 测试计划 / 概览 / 各类别子视图与深链。          |
-| `list-repositories`     | `List Repositories` | 浏览代码库，本地搜索 + 在 Codeup 中打开。                                  |
-| `list-merge-requests`   | `List Merge Requests`| 按状态（开启 / 已合并 / 已关闭，默认开启）浏览合并请求，本地搜索。        |
-| `list-test-plans`       | `Search Test Plan`  | 浏览当前 organization 下所有可见的测试计划，按状态过滤（默认进行中）。    |
-
+| 命令名                | Raycast 入口          | 行为                                                                         |
+| --------------------- | --------------------- | ---------------------------------------------------------------------------- |
+| `yunxiao-entry`       | `Yunxiao`             | 多门户深链（工作台 / 项目 / 测试 / Codeup / 制品库 / 企业管理后台 / 设置）。 |
+| `list-projects`       | `Project List`        | 浏览项目 → 工作项 / 迭代 / 测试计划 / 概览 / 各类别子视图与深链。            |
+| `list-repositories`   | `List Repositories`   | 浏览代码库，本地搜索 + 在 Codeup 中打开。                                    |
+| `list-merge-requests` | `List Merge Requests` | 按状态（开启 / 已合并 / 已关闭，默认开启）浏览合并请求，本地搜索。           |
+| `list-test-plans`     | `Search Test Plan`    | 浏览当前 organization 下所有可见的测试计划，按状态过滤（默认进行中）。       |
 
 ## 开发
 
@@ -56,18 +55,17 @@ npx tsc --noEmit   # 类型检查
 
 > 鉴权：所有端点统一使用 `x-yunxiao-token: <PAT>` 头。
 
-| 操作                | 文档                                                                   |
-| ------------------- | ---------------------------------------------------------------------- |
-| SearchProjects      | https://help.aliyun.com/zh/yunxiao/developer-reference/searchprojects  |
-| SearchWorkitems     | https://help.aliyun.com/zh/yunxiao/developer-reference/searchworkitems |
-| GetWorkitem         | https://help.aliyun.com/zh/yunxiao/developer-reference/getworkitem     |
-| ListProjectMembers  | https://help.aliyun.com/document_detail/2870170.html                   |
-| ListSprints         | https://help.aliyun.com/document_detail/460575.html                    |
-| ListTestPlan        | https://help.aliyun.com/document_detail/460575.html                    |
-| ListRepositories    | https://help.aliyun.com/document_detail/460575.html                    |
-| ListChangeRequests  | https://help.aliyun.com/document_detail/460575.html                    |
-| API 列表总览        | https://help.aliyun.com/document_detail/460575.html                    |
-
+| 操作               | 文档                                                                   |
+| ------------------ | ---------------------------------------------------------------------- |
+| SearchProjects     | https://help.aliyun.com/zh/yunxiao/developer-reference/searchprojects  |
+| SearchWorkitems    | https://help.aliyun.com/zh/yunxiao/developer-reference/searchworkitems |
+| GetWorkitem        | https://help.aliyun.com/zh/yunxiao/developer-reference/getworkitem     |
+| ListProjectMembers | https://help.aliyun.com/document_detail/2870170.html                   |
+| ListSprints        | https://help.aliyun.com/document_detail/460575.html                    |
+| ListTestPlan       | https://help.aliyun.com/document_detail/460575.html                    |
+| ListRepositories   | https://help.aliyun.com/document_detail/460575.html                    |
+| ListChangeRequests | https://help.aliyun.com/document_detail/460575.html                    |
+| API 列表总览       | https://help.aliyun.com/document_detail/460575.html                    |
 
 ## 路线图
 

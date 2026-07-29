@@ -1,12 +1,13 @@
 {
     "$schema": "https://www.raycast.com/schemas/extension.json",
     "name": "yunxiao",
+    "type": "module",
     "title": "Yunxiao",
     "description": "Yunxiao (Alibaba Cloud DevOps) is an end-to-end BizDevOps platform integrating project management, task tracking, code hosting, test management and automated delivery for software teams.",
     "icon": "icon.png",
     "author": "imvkmark",
     "categories": [
-        "Project Management"
+        "Productivity"
     ],
     "license": "MIT",
     "keywords": [

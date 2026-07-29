@@ -5,20 +5,20 @@ import raycastConfig from "@raycast/eslint-config";
  * typescript.configs.recommended 是嵌套数组，对 ESLint 10+ flat config 不合法）。
  */
 function flatten(input) {
-  const out = [];
-  for (const item of input) {
-    if (Array.isArray(item)) {
-      for (const child of flatten(item)) out.push(child);
-    } else if (item && typeof item === "object") {
-      out.push(item);
+    const out = [];
+    for (const item of input) {
+        if (Array.isArray(item)) {
+            for (const child of flatten(item)) out.push(child);
+        } else if (item && typeof item === "object") {
+            out.push(item);
+        }
     }
-  }
-  return out;
+    return out;
 }
 
-module.exports = [
-  {
-    ignores: ["node_modules/**", ".omc/**", ".claude/**", ".idea/**", "dist/**"],
-  },
-  ...flatten(raycastConfig),
+export default [
+    {
+        ignores: ["node_modules/**", ".omc/**", ".claude/**", ".idea/**", "dist/**"],
+    },
+    ...flatten(raycastConfig),
 ];

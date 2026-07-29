@@ -66,7 +66,6 @@ function toErrorDetails(err: unknown): ErrorDetails {
 }
 
 const STATUS_ALL = "ALL";
-const STATUS_TODO = "TODO";
 
 const STATUS_OPTIONS: { value: TestPlanStatus | typeof STATUS_ALL; title: string }[] = [
     { value: STATUS_ALL, title: "全部状态" },
@@ -158,7 +157,6 @@ export default function ListTestPlans() {
                 await showToast({ style: Toast.Style.Failure, title: "加载测试计划失败", message: brief });
             });
         return () => controller.abort();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [statusFilter, reloadKey]);
 
     const projectIndex = useMemo(() => {

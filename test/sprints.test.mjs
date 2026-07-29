@@ -98,9 +98,7 @@ test("normalizeSprints interprets 'true'/'false' strings as locked", () => {
 });
 
 test("normalizeSprints drops owners entries with no id and no name", () => {
-    const [sprint] = normalizeSprints([
-        { id: "1", owners: [{ id: "x" }, { name: "y" }, {}, { id: "z", name: "zz" }] },
-    ]);
+    const [sprint] = normalizeSprints([{ id: "1", owners: [{ id: "x" }, { name: "y" }, {}, { id: "z", name: "zz" }] }]);
     // 约定保留 undefined 键（与 normalizeMergeRequests / normalizeTestPlans 一致），
     // 但完全空的对象 { id: undefined, name: undefined } 不会出现在 owners 列表里。
     assert.deepEqual(sprint.owners, [

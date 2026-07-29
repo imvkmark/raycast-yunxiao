@@ -16,7 +16,7 @@
  */
 
 import { Action, ActionPanel, getPreferenceValues, Icon, Keyboard, List, showToast, Toast } from "@raycast/api";
-import { codeupChangesUrl, codeupGroupsUrl, codeupMineUrl, organizationAdminUrl } from "./utils/urls";
+import { organizationAdminUrl } from "./utils/urls";
 
 const BASE = "https://devops.aliyun.com";
 
