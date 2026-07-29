@@ -168,14 +168,6 @@ export default function ListProjects() {
                 actions={
                     error ? (
                         <ActionPanel>
-                            <Action
-                                title="重新加载"
-                                onAction={() => {
-                                    setProjects(null);
-                                    setError(undefined);
-                                    setErrorDetails(undefined);
-                                }}
-                            />
                             {errorDetails ? (
                                 <Action.CopyToClipboard
                                     title="复制错误详情"
