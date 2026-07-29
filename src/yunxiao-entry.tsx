@@ -29,204 +29,175 @@ const ACCOUNT_ROOT = "https://account-devops.aliyun.com";
 const PERSONAL_WORKITEM_VIEW_ID = "441e17ad4f72718076eedcf5";
 
 interface OrgAdminPreferences {
-    organizationId?: string;
+  organizationId?: string;
 }
 
 type SectionId = "workbench" | "projex" | "test" | "codeup" | "packages" | "admin" | "settings";
 
 interface PortalItem {
-    id: string;
-    /** 业务域分组，决定该条目渲染到哪个 List.Section */
-    section: SectionId;
-    title: string;
-    subtitle: string;
-    /** 静态 URL；不可用时为 null */
-    url: string | null;
-    /** 列表项主快捷键（可选，未填则在 ActionPanel 里不带快捷键） */
-    shortcut?: { modifiers: Keyboard.KeyModifier[]; key: Keyboard.KeyEquivalent };
-    /** URL 不可用时 toast 文案；缺省表示 URL 永远可用 */
-    unavailableMessage?: string;
+  id: string;
+  /** 业务域分组，决定该条目渲染到哪个 List.Section */
+  section: SectionId;
+  title: string;
+  subtitle: string;
+  /** 静态 URL；不可用时为 null */
+  url: string | null;
+  /** 列表项主快捷键（可选，未填则在 ActionPanel 里不带快捷键） */
+  shortcut?: { modifiers: Keyboard.KeyModifier[]; key: Keyboard.KeyEquivalent };
+  /** URL 不可用时 toast 文案；缺省表示 URL 永远可用 */
+  unavailableMessage?: string;
 }
 
 /** 「企业管理后台」依赖偏好里的 Organization Id */
 const ORGANIZATION_ID = (getPreferenceValues<OrgAdminPreferences>().organizationId ?? "").trim();
 
 const ORG_ADMIN_UNAVAILABLE = "缺少 Organization Id，请在扩展偏好中设置后再试。";
-const ORG_ADMIN_SUBTITLE_READY = "成员 / 权限管理";
+const ORG_ADMIN_SUBTITLE_READY = "Members / Permissions";
 const ORG_ADMIN_SUBTITLE_MISSING = "请先在扩展偏好中设置 Organization Id";
 
 const PORTAL_ITEMS: PortalItem[] = [
-    // 工作台
-    {
-        id: "workbench",
-        section: "workbench",
-        title: "访问工作台",
-        subtitle: "通知、待办、最近访问",
-        url: `${BASE}/workbench`,
-        shortcut: { modifiers: ["cmd", "shift"], key: "h" },
-    },
+  // 工作台
+  {
+    id: "workbench",
+    section: "workbench",
+    title: "工作台",
+    subtitle: "Todos / Recent Access",
+    url: `${BASE}/workbench`,
+    shortcut: { modifiers: ["cmd", "shift"], key: "h" },
+  },
 
-    // 项目协作
-    {
-        id: "projex",
-        section: "projex",
-        title: "访问项目协作",
-        subtitle: "项目协作总览页",
-        url: `${BASE}/projex/project`,
-        shortcut: { modifiers: ["cmd", "shift"], key: "p" },
-    },
-    {
-        id: "projex-mine",
-        section: "projex",
-        title: "访问个人工作项",
-        subtitle: "我负责的全部工作项视图",
-        url: `${BASE}/projex/workitem#viewIdentifier=${PERSONAL_WORKITEM_VIEW_ID}`,
-        shortcut: { modifiers: ["cmd", "shift"], key: "a" },
-    },
+  // 项目协作
+  {
+    id: "projex",
+    section: "workbench",
+    title: "项目",
+    subtitle: "My Projects",
+    url: `${BASE}/projex/project`,
+    shortcut: { modifiers: ["cmd", "shift"], key: "p" },
+  },
+  {
+    id: "projex-mine",
+    section: "workbench",
+    title: "工作项",
+    subtitle: "All My Active Work Items",
+    url: `${BASE}/projex/workitem#viewIdentifier=${PERSONAL_WORKITEM_VIEW_ID}`,
+    shortcut: { modifiers: ["cmd", "shift"], key: "a" },
+  },
 
-    // 测试管理
-    {
-        id: "testhub",
-        section: "test",
-        title: "访问测试管理",
-        subtitle: "Testhub 仓库 / 用例库",
-        url: `${BASE}/testhub/repo`,
-        shortcut: { modifiers: ["cmd", "shift"], key: "t" },
-    },
+  // 测试管理
+  {
+    id: "testhub",
+    section: "projex",
+    title: "测试管理",
+    subtitle: "Testhub / Testcases",
+    url: `${BASE}/testhub/repo`,
+    shortcut: { modifiers: ["cmd", "shift"], key: "t" },
+  },
 
-    // 代码管理（Codeup）：主页 + 三个快速入口
-    {
-        id: "codeup",
-        section: "codeup",
-        title: "访问代码管理",
-        subtitle: "Codeup 代码仓库主页",
-        url: CODEUP_ROOT,
-        shortcut: { modifiers: ["cmd", "shift"], key: "c" },
-    },
-    {
-        id: "codeup-mine",
-        section: "codeup",
-        title: "代码库",
-        subtitle: "我参与的代码库",
-        url: codeupMineUrl(),
-        shortcut: { modifiers: ["cmd", "shift"], key: "b" },
-    },
-    {
-        id: "codeup-groups",
-        section: "codeup",
-        title: "代码组",
-        subtitle: "我参与的代码组",
-        url: codeupGroupsUrl(),
-        shortcut: { modifiers: ["cmd", "shift"], key: "g" },
-    },
-    {
-        id: "codeup-changes",
-        section: "codeup",
-        title: "合并请求",
-        subtitle: "我创建的合并请求",
-        url: codeupChangesUrl(),
-        shortcut: { modifiers: ["cmd", "shift"], key: "e" },
-    },
+  // 代码管理（Codeup）：主页 + 三个快速入口
+  {
+    id: "codeup",
+    section: "projex",
+    title: "代码仓库",
+    subtitle: "Codeup Repo Homepage",
+    url: CODEUP_ROOT,
+    shortcut: { modifiers: ["cmd", "shift"], key: "c" },
+  },
+  // 制品仓库
+  {
+    id: "packages",
+    section: "projex",
+    title: "制品库",
+    subtitle: "Packages",
+    url: PACKAGES_ROOT,
+    shortcut: { modifiers: ["cmd", "shift"], key: "r" },
+  },
 
-    // 制品仓库
-    {
-        id: "packages",
-        section: "packages",
-        title: "访问制品仓库",
-        subtitle: "Packages 私有制品库",
-        url: PACKAGES_ROOT,
-        shortcut: { modifiers: ["cmd", "shift"], key: "r" },
-    },
+  // 企业管理后台
+  {
+    id: "org-admin",
+    section: "settings",
+    title: "企业管理后台",
+    subtitle: ORGANIZATION_ID ? ORG_ADMIN_SUBTITLE_READY : ORG_ADMIN_SUBTITLE_MISSING,
+    url: ORGANIZATION_ID ? organizationAdminUrl(ORGANIZATION_ID) : null,
+    unavailableMessage: ORG_ADMIN_UNAVAILABLE,
+    shortcut: { modifiers: ["cmd", "shift"], key: "m" },
+  },
 
-    // 企业管理后台
-    {
-        id: "org-admin",
-        section: "admin",
-        title: "访问企业管理后台",
-        subtitle: ORGANIZATION_ID ? ORG_ADMIN_SUBTITLE_READY : ORG_ADMIN_SUBTITLE_MISSING,
-        url: ORGANIZATION_ID ? organizationAdminUrl(ORGANIZATION_ID) : null,
-        unavailableMessage: ORG_ADMIN_UNAVAILABLE,
-        shortcut: { modifiers: ["cmd", "shift"], key: "m" },
-    },
-
-    // 个人设置
-    {
-        id: "personal-settings",
-        section: "settings",
-        title: "访问个人设置",
-        subtitle: "PAT / 个人偏好 / 头像",
-        url: `${ACCOUNT_ROOT}/settings/profile`,
-        shortcut: { modifiers: ["cmd", "shift"], key: "s" },
-    },
+  // 个人设置
+  {
+    id: "personal-settings",
+    section: "settings",
+    title: "个人设置",
+    subtitle: "PAT / User Settings / Avatar",
+    url: `${ACCOUNT_ROOT}/settings/profile`,
+    shortcut: { modifiers: ["cmd", "shift"], key: "s" },
+  },
 ];
 
 /** 业务域分组的渲染顺序与中文标题 */
 const SECTION_LAYOUT: { id: SectionId; title: string }[] = [
-    { id: "workbench", title: "工作台" },
-    { id: "projex", title: "项目协作" },
-    { id: "test", title: "测试管理" },
-    { id: "codeup", title: "代码管理" },
-    { id: "packages", title: "制品仓库" },
-    { id: "admin", title: "企业管理后台" },
-    { id: "settings", title: "个人设置" },
+  { id: "workbench", title: "Workbench" },
+  { id: "projex", title: "Projects" },
+  { id: "settings", title: "Settings" },
 ];
 
 /* ---------- 主命令 ---------- */
 
 export default function YunxiaoEntry() {
-    function showUnavailable(item: PortalItem) {
-        void showToast({
-            style: Toast.Style.Failure,
-            title: "无法跳转",
-            message: item.unavailableMessage ?? "没有可用的链接。",
-        });
-    }
+  function showUnavailable(item: PortalItem) {
+    void showToast({
+      style: Toast.Style.Failure,
+      title: "无法跳转",
+      message: item.unavailableMessage ?? "没有可用的链接。",
+    });
+  }
 
-    return (
-        <List searchBarPlaceholder="搜索云效入口…">
-            {SECTION_LAYOUT.map((section) => {
-                const sectionItems = PORTAL_ITEMS.filter((item) => item.section === section.id);
-                if (sectionItems.length === 0) return null;
-                return (
-                    <List.Section key={section.id} title={section.title}>
-                        {sectionItems.map((item) => {
-                            const resolvedUrl = item.url;
-                            return (
-                                <List.Item
-                                    key={item.id}
-                                    icon={Icon.Globe}
-                                    title={item.title}
-                                    subtitle={item.subtitle}
-                                    actions={
-                                        <ActionPanel>
-                                            {resolvedUrl ? (
-                                                <Action.OpenInBrowser
-                                                    title={item.title}
-                                                    url={resolvedUrl}
-                                                    {...(item.shortcut ? { shortcut: item.shortcut } : {})}
-                                                />
-                                            ) : (
-                                                <Action
-                                                    title={item.title}
-                                                    icon={Icon.Globe}
-                                                    {...(item.shortcut ? { shortcut: item.shortcut } : {})}
-                                                    onAction={() => showUnavailable(item)}
-                                                />
-                                            )}
-                                            <Action.CopyToClipboard
-                                                title="复制链接"
-                                                content={
-                                                    resolvedUrl ?? `${BASE}/org-admin/{organization_id}/members/member`
-                                                }
-                                            />
-                                        </ActionPanel>
-                                    }
-                                />
-                            );
-                        })}
-                    </List.Section>
-                );
+  return (
+    <List searchBarPlaceholder="搜索云效入口…">
+      {SECTION_LAYOUT.map((section) => {
+        const sectionItems = PORTAL_ITEMS.filter((item) => item.section === section.id);
+        if (sectionItems.length === 0) return null;
+        return (
+          <List.Section key={section.id} title={section.title}>
+            {sectionItems.map((item) => {
+              const resolvedUrl = item.url;
+              return (
+                <List.Item
+                  key={item.id}
+                  icon={Icon.Globe}
+                  title={item.title}
+                  subtitle={item.subtitle}
+                  actions={
+                    <ActionPanel>
+                      {resolvedUrl ? (
+                        <Action.OpenInBrowser
+                          title={item.title}
+                          url={resolvedUrl}
+                          {...(item.shortcut ? { shortcut: item.shortcut } : {})}
+                        />
+                      ) : (
+                        <Action
+                          title={item.title}
+                          icon={Icon.Globe}
+                          {...(item.shortcut ? { shortcut: item.shortcut } : {})}
+                          onAction={() => showUnavailable(item)}
+                        />
+                      )}
+                      <Action.CopyToClipboard
+                        title="复制链接"
+                        content={
+                          resolvedUrl ?? `${BASE}/org-admin/{organization_id}/members/member`
+                        }
+                      />
+                    </ActionPanel>
+                  }
+                />
+              );
             })}
-        </List>
-    );
+          </List.Section>
+        );
+      })}
+    </List>
+  );
 }

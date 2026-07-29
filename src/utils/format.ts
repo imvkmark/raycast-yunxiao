@@ -2,7 +2,7 @@
  * 视图层格式化助手。
  */
 
-import type { Workitem, WorkitemCategory, WorkitemStatusRef, WorkitemPriorityRef } from "../api/types";
+import type { Workitem, WorkitemCategory, WorkitemPriorityRef, WorkitemStatusRef } from "../api/types";
 
 export function categoryLabel(c: WorkitemCategory | string | undefined): string {
   switch (c) {
@@ -37,6 +37,24 @@ function escapeMarkdown(s: string | undefined): string {
   if (!s) return "";
   // Raycast markdown 是 github 风味的；保留换行
   return s.replace(/\r/g, "");
+}
+
+/**
+ * 把任意日期字符串规范化为 YYYY-MM-DD 形式。
+ * - 空值原样返回 "-"；
+ * - 已是 `YYYY-MM-DD...`（ISO 等）开头的，直接截前 10 位，避免时区漂移；
+ * - 其它可被 Date 解析的格式（含时间戳、"yyyy/M/d" 等），按本地时区格式化；
+ * - 解析失败时回退到原值，便于排查脏数据。
+ */
+export function formatDateYMD(value: string | number | undefined | null): string {
+  if (value === undefined || value === null || value === "") return "-";
+  const raw = typeof value === "number" ? String(value) : value;
+  const d = new Date(Number(raw));
+  if (Number.isNaN(d.getTime())) return raw;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 /**

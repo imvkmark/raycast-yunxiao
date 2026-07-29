@@ -48,6 +48,28 @@ export async function listWorkitems(opts: ListWorkitemsOptions): Promise<Paginat
         spaceType: "Project",
         page,
         perPage,
+        conditions: JSON.stringify({
+          "conditionGroups": [
+            [
+              {
+                "fieldIdentifier": "statusStage",
+                "operator": "CONTAINS",
+                "value": [
+                  "1",
+                  "6",
+                  "2",
+                  "7",
+                  "11",
+                  "12",
+                  "13"
+                ],
+                "toValue": null,
+                "className": "statusStage",
+                "format": "multiList"
+              },
+            ]
+          ]
+        }),
         orderBy: "gmtCreate",
         sort: "desc",
     };

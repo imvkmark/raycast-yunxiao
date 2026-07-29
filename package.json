@@ -6,8 +6,8 @@
     "icon": "icon.png",
     "author": "imvkmark",
     "categories": [
-        "Productivity",
-        "Developer Tools"
+        "Developer Tools",
+        "Project Management"
     ],
     "license": "MIT",
     "keywords": [
@@ -61,7 +61,7 @@
     "commands": [
         {
             "name": "yunxiao-entry",
-            "title": "Yunxiao Entry",
+            "title": "Yunxiao",
             "description": "工作台 / 项目协作 / 测试管理 / 代码管理 / 制品仓库 / 企业管理后台 / 个人设置 一键直达。",
             "icon": "icon.png",
             "mode": "view"
@@ -96,19 +96,20 @@
         }
     ],
     "dependencies": {
-        "@raycast/api": "^1.83.1"
+        "@raycast/api": "^1.104.23"
     },
     "devDependencies": {
         "@raycast/eslint-config": "latest",
         "@types/node": "latest",
         "@types/react": "latest",
-        "typescript": "latest",
-        "eslint": "latest"
+        "eslint": "latest",
+        "typescript": "latest"
     },
     "scripts": {
         "test": "node --test --experimental-strip-types test/*.test.mjs",
         "build": "ray build",
         "dev": "ray develop",
-        "lint": "ray lint"
+        "lint": "ray lint",
+        "publish": "npx @raycast/api@latest publish"
     }
 }

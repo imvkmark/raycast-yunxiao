@@ -32,7 +32,7 @@ import {
   type WorkitemCategory,
 } from "./api/types";
 import { listWorkitems } from "./api/workitems";
-import { categoryLabel } from "./utils/format";
+import { categoryLabel, formatDateYMD } from "./utils/format";
 import {
   projectCategoryUrl,
   projectUrl,
@@ -201,88 +201,86 @@ export default function ListProjects() {
           ) : undefined
         }
       />
-      <List.Section title="我的项目">
-        {filtered.map((p) => {
-          const pid = p.id;
-          return (
-            <List.Item
-              key={pid}
-              icon={Icon.Folder}
-              title={p.name ?? "(未命名项目)"}
-              subtitle={p.identifier ?? ""}
-              accessories={[{ tag: p.visibility ?? "-" }]}
-              actions={
-                <ActionPanel>
-                  <Action
-                    title="查看工作项"
-                    icon={Icon.List}
-                    onAction={() => showWorkitems(p)}
-                  />
-                  <Action.OpenInBrowser
-                    title="所有工作项"
-                    url={projectWorkitemsUrl(pid)}
-                    shortcut={{ modifiers: ["cmd", "shift"], key: "a" }}
-                  />
-                  <Action
-                    title="查看迭代"
-                    icon={Icon.Calendar}
-                    shortcut={{ modifiers: ["cmd", "shift", "opt"], key: "s" }}
-                    onAction={() => showSprints(p)}
-                  />
-                  <Action.OpenInBrowser
-                    title="访问迭代 Backlog"
-                    url={sprintBacklogUrl(pid)}
-                    shortcut={{ modifiers: ["cmd", "shift"], key: "s" }}
-                  />
-                  <Action
-                    title="查看测试计划"
-                    icon={Icon.Bug}
-                    shortcut={{ modifiers: ["cmd", "shift", "opt"], key: "t" }}
-                    onAction={() => showTestPlans(p)}
-                  />
-                  <Action.OpenInBrowser
-                    title="访问测试计划"
-                    url={testPlanListUrl(pid)}
-                    shortcut={{ modifiers: ["cmd", "shift"], key: "p" }}
-                  />
-                  <Action.OpenInBrowser
-                    title="概览"
-                    url={projectUrl(pid)}
-                    shortcut={{ modifiers: ["cmd", "shift"], key: "v" }}
-                  />
-                  <Action.OpenInBrowser
-                    title="查看需求"
-                    url={projectCategoryUrl(pid, "req")}
-                    shortcut={{ modifiers: ["cmd", "shift"], key: "r" }}
-                  />
-                  <Action.OpenInBrowser
-                    title="查看任务"
-                    url={projectCategoryUrl(pid, "task")}
-                    shortcut={{ modifiers: ["cmd", "shift"], key: "t" }}
-                  />
-                  <Action.OpenInBrowser
-                    title="查看缺陷"
-                    url={projectCategoryUrl(pid, "bug")}
-                    shortcut={{ modifiers: ["cmd", "shift"], key: "b" }}
-                  />
-                  <Action.OpenInBrowser
-                    title="查看主题"
-                    url={projectCategoryUrl(pid, "topic")}
-                    shortcut={{ modifiers: ["cmd", "shift"], key: "z" }}
-                  />
-                  <Action.OpenInBrowser
-                    title="查看原始诉求"
-                    url={projectCategoryUrl(pid, "request")}
-                    shortcut={{ modifiers: ["cmd", "shift"], key: "o" }}
-                  />
-                  <Action.CopyToClipboard title="复制项目 ID" content={pid} />
-                  <Action.OpenInBrowser title="在云效中打开" url={projectUrl(pid)} />
-                </ActionPanel>
-              }
-            />
-          );
-        })}
-      </List.Section>
+      {filtered.map((p) => {
+        const pid = p.id;
+        return (
+          <List.Item
+            key={pid}
+            icon={Icon.Folder}
+            title={p.name ?? "(未命名项目)"}
+            subtitle={p.identifier ?? ""}
+            accessories={[{ tag: p.visibility ?? "-" }]}
+            actions={
+              <ActionPanel>
+                <Action
+                  title="查看工作项"
+                  icon={Icon.List}
+                  onAction={() => showWorkitems(p)}
+                />
+                <Action.OpenInBrowser
+                  title="所有工作项"
+                  url={projectWorkitemsUrl(pid)}
+                  shortcut={{ modifiers: ["cmd", "shift"], key: "a" }}
+                />
+                <Action
+                  title="查看迭代"
+                  icon={Icon.Calendar}
+                  shortcut={{ modifiers: ["cmd", "shift", "opt"], key: "s" }}
+                  onAction={() => showSprints(p)}
+                />
+                <Action.OpenInBrowser
+                  title="访问迭代 Backlog"
+                  url={sprintBacklogUrl(pid)}
+                  shortcut={{ modifiers: ["cmd", "shift"], key: "s" }}
+                />
+                <Action
+                  title="查看测试计划"
+                  icon={Icon.Bug}
+                  shortcut={{ modifiers: ["cmd", "shift", "opt"], key: "t" }}
+                  onAction={() => showTestPlans(p)}
+                />
+                <Action.OpenInBrowser
+                  title="访问测试计划"
+                  url={testPlanListUrl(pid)}
+                  shortcut={{ modifiers: ["cmd", "shift"], key: "p" }}
+                />
+                <Action.OpenInBrowser
+                  title="概览"
+                  url={projectUrl(pid)}
+                  shortcut={{ modifiers: ["cmd", "shift"], key: "v" }}
+                />
+                <Action.OpenInBrowser
+                  title="查看需求"
+                  url={projectCategoryUrl(pid, "req")}
+                  shortcut={{ modifiers: ["cmd", "shift"], key: "r" }}
+                />
+                <Action.OpenInBrowser
+                  title="查看任务"
+                  url={projectCategoryUrl(pid, "task")}
+                  shortcut={{ modifiers: ["cmd", "shift"], key: "t" }}
+                />
+                <Action.OpenInBrowser
+                  title="查看缺陷"
+                  url={projectCategoryUrl(pid, "bug")}
+                  shortcut={{ modifiers: ["cmd", "shift"], key: "b" }}
+                />
+                <Action.OpenInBrowser
+                  title="查看主题"
+                  url={projectCategoryUrl(pid, "topic")}
+                  shortcut={{ modifiers: ["cmd", "shift"], key: "z" }}
+                />
+                <Action.OpenInBrowser
+                  title="查看原始诉求"
+                  url={projectCategoryUrl(pid, "request")}
+                  shortcut={{ modifiers: ["cmd", "shift"], key: "o" }}
+                />
+                <Action.CopyToClipboard title="复制项目 ID" content={pid} />
+                <Action.OpenInBrowser title="在云效中打开" url={projectUrl(pid)} />
+              </ActionPanel>
+            }
+          />
+        );
+      })}
     </List>
   );
 }
@@ -304,7 +302,7 @@ function SprintsView({ projectId, projectName }: SprintsViewProps) {
     setError(undefined);
     setErrorDetails(undefined);
     try {
-      const items = await searchSprints({ projectId });
+      const items = await searchSprints({ projectId, status: ['TODO', 'DOING'] });
       setSprints(items);
       if (items.length === 0) setError("该项目下暂无迭代。");
     } catch (err) {
@@ -337,7 +335,7 @@ function SprintsView({ projectId, projectName }: SprintsViewProps) {
       />
       <List.Section title={`迭代 / ${projectName}`}>
         {items.map((s) => {
-          const range = s.startDate && s.endDate ? `${s.startDate.slice(0, 10)} → ${s.endDate.slice(0, 10)}` : "-";
+          const range = s.startDate && s.endDate ? `${formatDateYMD(s.startDate)} → ${formatDateYMD(s.endDate)}` : "-";
           const ownerNames = s.owners
             ?.map((owner) => owner.name ?? owner.id)
             .filter((value): value is string => Boolean(value))
@@ -519,8 +517,8 @@ function WorkitemsView({ projectId, projectName }: WorkitemsViewProps) {
     >
       <List.EmptyView
         icon={error ? Icon.ExclamationMark : Icon.MagnifyingGlass}
-        title={error ? "无法加载工作项" : items.length === 0 ? "暂无工作项" : "没有匹配项"}
-        description={error ?? (items.length === 0 ? "尝试切换类别后再试一次。" : "尝试其他搜索关键词。")}
+        title={error ? "无法加载工作项" : items.length === 0 ? "暂无活动工作项" : "没有匹配项"}
+        description={error ?? (items.length === 0 ? "分配后再试一次。" : "尝试其他搜索关键词。")}
         actions={
           error ? (
             <ActionPanel>
@@ -546,7 +544,6 @@ function WorkitemsView({ projectId, projectName }: WorkitemsViewProps) {
               actions={
                 <ActionPanel>
                   {browserUrl ? <Action.OpenInBrowser title="在云效中打开" url={browserUrl} /> : null}
-                  <Action.CopyToClipboard title="复制工作项 ID" content={workitem.serialNumber} />
                 </ActionPanel>
               }
             />
