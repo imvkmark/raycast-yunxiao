@@ -12,23 +12,23 @@ import { buildProjectPath, resolveCredentials, request } from "./client";
 import type { Project } from "./types";
 
 interface SearchProjectsResponse {
-  /** 响应头里取分页信息 */
-  pagination?: {
-    page?: number;
-    perPage?: number;
-    total?: number;
-    nextPage?: string;
-  };
+    /** 响应头里取分页信息 */
+    pagination?: {
+        page?: number;
+        perPage?: number;
+        total?: number;
+        nextPage?: string;
+    };
 }
 
 export interface ListProjectsOptions {
-  /** 每页大小，默认 50 */
-  perPage?: number;
-  /** 页码，从 1 开始，默认 1 */
-  page?: number;
-  /** 关键字过滤（按 name 模糊匹配） */
-  keyword?: string;
-  signal?: AbortSignal;
+    /** 每页大小，默认 50 */
+    perPage?: number;
+    /** 页码，从 1 开始，默认 1 */
+    page?: number;
+    /** 关键字过滤（按 name 模糊匹配） */
+    keyword?: string;
+    signal?: AbortSignal;
 }
 
 /**
@@ -37,47 +37,47 @@ export interface ListProjectsOptions {
  * SearchProjects 返回裸数组 [Project,...]，无需 .items / .projects 包装。
  */
 export async function listProjects(opts: ListProjectsOptions = {}): Promise<Project[]> {
-  const creds = resolveCredentials();
+    const creds = resolveCredentials();
 
-  const path = buildProjectPath(creds, "projects:search");
-  const perPage = clampPerPage(opts.perPage ?? 50);
-  const page = Math.max(1, Math.floor(opts.page ?? 1));
+    const path = buildProjectPath(creds, "projects:search");
+    const perPage = clampPerPage(opts.perPage ?? 50);
+    const page = Math.max(1, Math.floor(opts.page ?? 1));
 
-  // 构造 conditions：如果给了 keyword，按 name 模糊匹配
-  const conditions: Array<Array<unknown>> = [];
-  if (opts.keyword && opts.keyword.trim()) {
-    conditions.push([
-      {
-        className: "string",
-        fieldIdentifier: "name",
-        format: "input",
-        operator: "CONTAINS",
-        value: opts.keyword.trim(),
-      },
-    ]);
-  }
-  const body: Record<string, unknown> = {
-    page,
-    perPage,
-    orderBy: "gmtCreate",
-    sort: "desc",
-  };
-  if (conditions.length > 0) {
-    body.conditions = JSON.stringify({ conditionGroups: conditions });
-  }
+    // 构造 conditions：如果给了 keyword，按 name 模糊匹配
+    const conditions: Array<Array<unknown>> = [];
+    if (opts.keyword && opts.keyword.trim()) {
+        conditions.push([
+            {
+                className: "string",
+                fieldIdentifier: "name",
+                format: "input",
+                operator: "CONTAINS",
+                value: opts.keyword.trim(),
+            },
+        ]);
+    }
+    const body: Record<string, unknown> = {
+        page,
+        perPage,
+        orderBy: "gmtCreate",
+        sort: "desc",
+    };
+    if (conditions.length > 0) {
+        body.conditions = JSON.stringify({ conditionGroups: conditions });
+    }
 
-  const data = await request<Project[]>(path, {
-    method: "POST",
-    body,
-    signal: opts.signal,
-  });
-  // SearchProjects 返回裸数组
-  return Array.isArray(data) ? data : [];
+    const data = await request<Project[]>(path, {
+        method: "POST",
+        body,
+        signal: opts.signal,
+    });
+    // SearchProjects 返回裸数组
+    return Array.isArray(data) ? data : [];
 }
 
 function clampPerPage(n: number): number {
-  if (!Number.isFinite(n)) return 50;
-  return Math.min(200, Math.max(1, Math.floor(n)));
+    if (!Number.isFinite(n)) return 50;
+    return Math.min(200, Math.max(1, Math.floor(n)));
 }
 
 // 重新导出方便调用方读取分页头（如需做"加载更多"再启用）

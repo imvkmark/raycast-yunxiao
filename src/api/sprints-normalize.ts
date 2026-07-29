@@ -44,9 +44,7 @@ function userRef(value: unknown): SprintUserRef | undefined {
 
 function userRefList(value: unknown): SprintUserRef[] | undefined {
     if (!Array.isArray(value)) return undefined;
-    const list = value
-        .map((entry) => userRef(entry))
-        .filter((entry): entry is SprintUserRef => entry !== undefined);
+    const list = value.map((entry) => userRef(entry)).filter((entry): entry is SprintUserRef => entry !== undefined);
     return list.length > 0 ? list : undefined;
 }
 
