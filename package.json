@@ -3,6 +3,7 @@
     "name": "yunxiao",
     "type": "module",
     "title": "Yunxiao",
+    "version": "1.0.0",
     "description": "Yunxiao (Alibaba Cloud DevOps) is an end-to-end BizDevOps platform integrating project management, task tracking, code hosting, test management and automated delivery for software teams.",
     "icon": "icon.png",
     "author": "imvkmark",
@@ -99,11 +100,14 @@
         "@raycast/api": "^1.104.23"
     },
     "devDependencies": {
-        "@raycast/eslint-config": "latest",
-        "@types/node": "latest",
-        "@types/react": "latest",
-        "eslint": "latest",
-        "typescript": "latest"
+        "@raycast/eslint-config": "^2.1.1",
+        "@types/node": "^20.0.0",
+        "@types/react": "^18.2.0",
+        "eslint": "^9.0.0",
+        "typescript": "^5.4.0"
+    },
+    "overrides": {
+        "@types/react": "^18.2.0"
     },
     "scripts": {
         "test": "node --test --experimental-strip-types test/*.test.mjs",
