@@ -86,8 +86,11 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
     }
     if (!res.ok) {
         const snippet = text ? text.slice(0, 200) : "(empty body)";
+        const MAX_BODY_TEXT_LENGTH = 4000;
+        const bodyText =
+            text.length > MAX_BODY_TEXT_LENGTH ? text.slice(0, MAX_BODY_TEXT_LENGTH) + "\n…(已截断)" : text;
         throw new YunxiaoApiError(res.status, `云效 OpenAPI ${res.status}：${snippet}`, {
-            bodyText: text,
+            bodyText,
             url,
             method,
         });

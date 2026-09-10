@@ -14,55 +14,26 @@
 
 import { Action, ActionPanel, Icon, List, Toast, showToast, Keyboard } from "@raycast/api";
 import { useEffect, useMemo, useState } from "react";
-import { resolveCredentials } from "./api/client";
 import { listProjects } from "./api/projects";
 import { listTestPlans, type TestPlanStatus } from "./api/testplans";
 import type { Project, TestPlan } from "./api/types";
+import { toErrorDetails as sharedToErrorDetails, type ErrorDetails } from "./utils/error-details";
 import { testPlanUrl } from "./utils/urls";
 import { formatDateYMD } from "./utils/format";
 
-interface ErrorDetails {
-    brief: string;
-    details: string;
-}
+const ERROR_DETAILS_HINTS = [
+    "偏好里 Personal Access Token 是否勾选了「测试管理 / 测试计划 / 只读」？",
+    "Organization Id 是否与浏览器登录后 URL 中的一致？",
+    "接入点模式是否选对：默认中心版（openapi-rdc.aliyuncs.com），Region 版需要填自部署 URL；Region 版请求 path 不带 organizations/{organizationId}/ 段。",
+    "把上面的 request 行复制到终端，用 curl 加 x-yunxiao-token 头直连，看返回。",
+];
 
-function toErrorDetails(err: unknown): ErrorDetails {
-    const msg = err instanceof Error ? err.message : String(err);
-    const anyErr = err as { status?: number; bodyText?: string; name?: string; url?: string; method?: string };
-    const status = anyErr?.status;
-    const body = anyErr?.bodyText ?? "";
-    const url = anyErr?.url;
-    const method = anyErr?.method ?? "POST";
-    const firstLine = msg.split("\n")[0] || "未知错误";
-    const brief = typeof status === "number" && status > 0 ? `${status} · ${firstLine}` : firstLine;
-    const lines: string[] = [];
-    lines.push(`时间: ${new Date().toISOString()}`);
-    try {
-        const creds = resolveCredentials();
-        if (creds) {
-            lines.push(`baseUrl: ${creds.baseUrl}`);
-            lines.push(`mode: ${creds.mode}`);
-            lines.push(`organizationId: ${creds.organizationId}`);
-        }
-    } catch {
-        /* ignore */
-    }
-    lines.push(`request: ${method} ${url ?? "(URL 未捕获)"}`);
-    if (typeof status === "number") lines.push(`status: ${status}`);
-    lines.push(`name: ${anyErr?.name ?? "Error"}`);
-    lines.push(`message: ${msg}`);
-    if (body) {
-        lines.push(`response body:`);
-        lines.push(body.length > 4000 ? body.slice(0, 4000) + "\n…(已截断)" : body);
-    }
-    lines.push("");
-    lines.push("排查建议:");
-    lines.push("1. 偏好里 Personal Access Token 是否勾选了「测试管理 / 测试计划 / 只读」？");
-    lines.push("2. Organization Id 是否与浏览器登录后 URL 中的一致？");
-    lines.push("3. 接入点模式是否选对：默认中心版（openapi-rdc.aliyuncs.com），Region 版需要填自部署 URL；");
-    lines.push("   Region 版请求 path 不带 organizations/{organizationId}/ 段。");
-    lines.push("4. 把上面的 request 行复制到终端，用 curl 加 x-yunxiao-token 头直连，看返回。");
-    return { brief, details: lines.join("\n") };
+function toErrorDetails(err: unknown) {
+    return sharedToErrorDetails(err, {
+        defaultMethod: "POST",
+        includeCredentialsContext: true,
+        hints: ERROR_DETAILS_HINTS,
+    });
 }
 
 const STATUS_ALL = "ALL";
@@ -193,7 +164,6 @@ export default function ListTestPlans() {
             searchBarAccessory={
                 <List.Dropdown
                     tooltip="状态过滤"
-                    storeValue={true}
                     value={statusFilter}
                     onChange={(value) => setStatusFilter(value as TestPlanStatus | typeof STATUS_ALL)}
                 >

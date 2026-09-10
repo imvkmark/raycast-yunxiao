@@ -11,15 +11,22 @@ function codeupPath(suffix: string): string {
     return `/oapi/v1/codeup/organizations/${encodeURIComponent(credentials.organizationId)}/${suffix}`;
 }
 
-async function loadAll<T>(loadPage: (page: number) => Promise<{ items: T[]; total?: number }>): Promise<T[]> {
+async function loadAll<T>(
+    loadPage: (page: number) => Promise<{ items: T[]; rawCount: number; total?: number }>,
+): Promise<T[]> {
     const all: T[] = [];
     const pageSize = 100;
     for (let page = 1; page <= 150; page += 1) {
         const result = await loadPage(page);
         all.push(...result.items);
-        if (result.items.length < pageSize || (result.total !== undefined && all.length >= result.total)) break;
+        if (result.rawCount < pageSize || (result.total !== undefined && all.length >= result.total)) break;
     }
     return all;
+}
+
+function rawItemCount(response: ListResponse<unknown>): number {
+    if (Array.isArray(response)) return response.length;
+    return response.result?.length ?? response.data?.length ?? 0;
 }
 
 export { normalizeMergeRequests, normalizeRepositories };
@@ -32,6 +39,7 @@ export function listRepositories(options: { signal?: AbortSignal } = {}): Promis
         });
         return {
             items: normalizeRepositories(response),
+            rawCount: rawItemCount(response),
             total: !Array.isArray(response) && typeof response.total === "number" ? response.total : undefined,
         };
     });
@@ -69,6 +77,7 @@ export function listOpenMergeRequests(
         });
         return {
             items: normalizeMergeRequests(response),
+            rawCount: rawItemCount(response),
             total: !Array.isArray(response) && typeof response.total === "number" ? response.total : undefined,
         };
     });

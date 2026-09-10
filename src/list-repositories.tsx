@@ -6,44 +6,24 @@
  */
 
 import { Action, ActionPanel, Icon, List, showToast, Toast, Keyboard } from "@raycast/api";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { listRepositories, type Repository } from "./api/codeup";
+import { toErrorDetails as sharedToErrorDetails } from "./utils/error-details";
 import { codeupRepositoryFallbackUrl, diagnosticUrl, safeHttpsUrl } from "./utils/urls";
 
-interface ErrorDetails {
-    /** 一行短原因，给 toast 和 EmptyView 用 */
-    brief: string;
-    /** 完整诊断信息（URL、状态码、响应体），给复制用 */
-    details: string;
-}
+const ERROR_DETAILS_HINTS = [
+    "偏好里 Personal Access Token 是否勾选了 Codeup / 代码库读取权限？",
+    "Organization Id 是否与浏览器登录后 URL 中的一致？",
+    "接入点模式是否选对：默认中心版（openapi-rdc.aliyuncs.com），Region 版需要填自部署 URL；Region 版请求 path 不带 organizations/{organizationId}/ 段。",
+    "把上面的 request 行复制到终端，用 curl 加 x-yunxiao-token 头直连，看返回。",
+];
 
-function toErrorDetails(err: unknown): ErrorDetails {
-    const msg = err instanceof Error ? err.message : String(err);
-    const anyErr = err as { status?: number; bodyText?: string; name?: string; url?: string; method?: string };
-    const status = anyErr?.status;
-    const body = anyErr?.bodyText ?? "";
-    const url = anyErr?.url;
-    const method = anyErr?.method ?? "GET";
-    const firstLine = msg.split("\n")[0] || "未知错误";
-    const brief = typeof status === "number" && status > 0 ? `${status} · ${firstLine}` : firstLine;
-    const lines: string[] = [];
-    lines.push(`时间: ${new Date().toISOString()}`);
-    lines.push(`request: ${method} ${diagnosticUrl(url)}`);
-    if (typeof status === "number") lines.push(`status: ${status}`);
-    lines.push(`name: ${anyErr?.name ?? "Error"}`);
-    lines.push(`message: ${msg}`);
-    if (body) {
-        lines.push(`response body:`);
-        lines.push(body.length > 4000 ? body.slice(0, 4000) + "\n…(已截断)" : body);
-    }
-    lines.push("");
-    lines.push("排查建议:");
-    lines.push("1. 偏好里 Personal Access Token 是否勾选了 Codeup / 代码库读取权限？");
-    lines.push("2. Organization Id 是否与浏览器登录后 URL 中的一致？");
-    lines.push("3. 接入点模式是否选对：默认中心版（openapi-rdc.aliyuncs.com），Region 版需要填自部署 URL；");
-    lines.push("   Region 版请求 path 不带 organizations/{organizationId}/ 段。");
-    lines.push("4. 把上面的 request 行复制到终端，用 curl 加 x-yunxiao-token 头直连，看返回。");
-    return { brief, details: lines.join("\n") };
+function toErrorDetails(err: unknown) {
+    return sharedToErrorDetails(err, {
+        defaultMethod: "GET",
+        formatUrl: diagnosticUrl,
+        hints: ERROR_DETAILS_HINTS,
+    });
 }
 
 interface ErrorActionsProps {
@@ -71,12 +51,15 @@ export default function ListRepositories() {
     const [error, setError] = useState<string>();
     const [errorDetails, setErrorDetails] = useState<string>();
     const [search, setSearch] = useState("");
+    const activeController = useRef<AbortController>();
 
     function load() {
+        activeController.current?.abort();
         setItems(null);
         setError(undefined);
         setErrorDetails(undefined);
         const controller = new AbortController();
+        activeController.current = controller;
         void listRepositories({ signal: controller.signal })
             .then((result) => {
                 setItems(result);

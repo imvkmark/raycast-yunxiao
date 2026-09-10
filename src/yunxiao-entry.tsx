@@ -15,6 +15,7 @@
  * PAT 凭证缺失也不会阻塞（这些链接走浏览器登录态）。
  */
 
+import { useMemo } from "react";
 import { Action, ActionPanel, getPreferenceValues, Icon, Keyboard, List, showToast, Toast } from "@raycast/api";
 import { organizationAdminUrl } from "./utils/urls";
 
@@ -44,92 +45,91 @@ interface PortalItem {
     unavailableMessage?: string;
 }
 
-/** 「企业管理后台」依赖偏好里的 Organization Id */
-const ORGANIZATION_ID = (getPreferenceValues<Preferences>().organizationId ?? "").trim();
-
 const ORG_ADMIN_UNAVAILABLE = "缺少 Organization Id，请在扩展偏好中设置后再试。";
 const ORG_ADMIN_SUBTITLE_READY = "Members / Permissions";
 const ORG_ADMIN_SUBTITLE_MISSING = "请先在扩展偏好中设置 Organization Id";
 
-const PORTAL_ITEMS: PortalItem[] = [
-    // 工作台
-    {
-        id: "workbench",
-        section: "workbench",
-        title: "工作台",
-        subtitle: "Todos / Recent Access",
-        url: `${BASE}/workbench`,
-        shortcut: { modifiers: ["cmd", "shift"], key: "h" },
-    },
+function buildPortalItems(organizationId: string): PortalItem[] {
+    return [
+        // 工作台
+        {
+            id: "workbench",
+            section: "workbench",
+            title: "工作台",
+            subtitle: "Todos / Recent Access",
+            url: `${BASE}/workbench`,
+            shortcut: { modifiers: ["cmd", "shift"], key: "h" },
+        },
 
-    // 项目协作
-    {
-        id: "projex",
-        section: "workbench",
-        title: "项目",
-        subtitle: "My Projects",
-        url: `${BASE}/projex/project`,
-        shortcut: { modifiers: ["cmd", "shift"], key: "p" },
-    },
-    {
-        id: "projex-mine",
-        section: "workbench",
-        title: "工作项",
-        subtitle: "All My Active Work Items",
-        url: `${BASE}/projex/workitem#viewIdentifier=${PERSONAL_WORKITEM_VIEW_ID}`,
-        shortcut: { modifiers: ["cmd", "shift"], key: "a" },
-    },
+        // 项目协作
+        {
+            id: "projex",
+            section: "workbench",
+            title: "项目",
+            subtitle: "My Projects",
+            url: `${BASE}/projex/project`,
+            shortcut: { modifiers: ["cmd", "shift"], key: "p" },
+        },
+        {
+            id: "projex-mine",
+            section: "workbench",
+            title: "工作项",
+            subtitle: "All My Active Work Items",
+            url: `${BASE}/projex/workitem#viewIdentifier=${PERSONAL_WORKITEM_VIEW_ID}`,
+            shortcut: { modifiers: ["cmd", "shift"], key: "a" },
+        },
 
-    // 测试管理
-    {
-        id: "testhub",
-        section: "projex",
-        title: "测试管理",
-        subtitle: "Testhub / Testcases",
-        url: `${BASE}/testhub/repo`,
-        shortcut: { modifiers: ["cmd", "shift"], key: "t" },
-    },
+        // 测试管理
+        {
+            id: "testhub",
+            section: "projex",
+            title: "测试管理",
+            subtitle: "Testhub / Testcases",
+            url: `${BASE}/testhub/repo`,
+            shortcut: { modifiers: ["cmd", "shift"], key: "t" },
+        },
 
-    // 代码管理（Codeup）：主页 + 三个快速入口
-    {
-        id: "codeup",
-        section: "projex",
-        title: "代码仓库",
-        subtitle: "Codeup Repo Homepage",
-        url: CODEUP_ROOT,
-        shortcut: { modifiers: ["cmd", "shift"], key: "c" },
-    },
-    // 制品仓库
-    {
-        id: "packages",
-        section: "projex",
-        title: "制品库",
-        subtitle: "Packages",
-        url: PACKAGES_ROOT,
-        shortcut: { modifiers: ["cmd", "shift"], key: "r" },
-    },
+        // 代码管理（Codeup）：主页 + 三个快速入口
+        {
+            id: "codeup",
+            section: "projex",
+            title: "代码仓库",
+            subtitle: "Codeup Repo Homepage",
+            url: CODEUP_ROOT,
+            shortcut: { modifiers: ["cmd", "shift"], key: "c" },
+        },
+        // 制品仓库
+        {
+            id: "packages",
+            section: "projex",
+            title: "制品库",
+            subtitle: "Packages",
+            url: PACKAGES_ROOT,
+            shortcut: { modifiers: ["cmd", "shift"], key: "r" },
+        },
 
-    // 企业管理后台
-    {
-        id: "org-admin",
-        section: "settings",
-        title: "企业管理后台",
-        subtitle: ORGANIZATION_ID ? ORG_ADMIN_SUBTITLE_READY : ORG_ADMIN_SUBTITLE_MISSING,
-        url: ORGANIZATION_ID ? organizationAdminUrl(ORGANIZATION_ID) : null,
-        unavailableMessage: ORG_ADMIN_UNAVAILABLE,
-        shortcut: { modifiers: ["cmd", "shift"], key: "m" },
-    },
+        // 企业管理后台
+        {
+            id: "org-admin",
+            section: "settings",
+            title: "企业管理后台",
+            subtitle: organizationId ? ORG_ADMIN_SUBTITLE_READY : ORG_ADMIN_SUBTITLE_MISSING,
+            url: organizationId ? organizationAdminUrl(organizationId) : null,
+            unavailableMessage: ORG_ADMIN_UNAVAILABLE,
+            shortcut: { modifiers: ["cmd", "shift"], key: "m" },
+        },
 
-    // 个人设置
-    {
-        id: "personal-settings",
-        section: "settings",
-        title: "个人设置",
-        subtitle: "PAT / User Settings / Avatar",
-        url: `${ACCOUNT_ROOT}/settings/profile`,
-        shortcut: { modifiers: ["cmd", "shift"], key: "s" },
-    },
-];
+        // 个人设置
+        {
+            id: "personal-settings",
+            section: "settings",
+            title: "个人设置",
+            subtitle: "PAT / User Settings / Avatar",
+            url: `${ACCOUNT_ROOT}/settings/profile`,
+            shortcut: { modifiers: ["cmd", "shift"], key: "s" },
+        },
+    ];
+}
 
 /** 业务域分组的渲染顺序与中文标题 */
 const SECTION_LAYOUT: { id: SectionId; title: string }[] = [
@@ -141,6 +141,9 @@ const SECTION_LAYOUT: { id: SectionId; title: string }[] = [
 /* ---------- 主命令 ---------- */
 
 export default function YunxiaoEntry() {
+    const organizationId = (getPreferenceValues<Preferences>().organizationId ?? "").trim();
+    const portalItems = useMemo(() => buildPortalItems(organizationId), [organizationId]);
+
     function showUnavailable(item: PortalItem) {
         void showToast({
             style: Toast.Style.Failure,
@@ -152,7 +155,7 @@ export default function YunxiaoEntry() {
     return (
         <List searchBarPlaceholder="搜索云效入口…">
             {SECTION_LAYOUT.map((section) => {
-                const sectionItems = PORTAL_ITEMS.filter((item) => item.section === section.id);
+                const sectionItems = portalItems.filter((item) => item.section === section.id);
                 if (sectionItems.length === 0) return null;
                 return (
                     <List.Section key={section.id} title={section.title}>

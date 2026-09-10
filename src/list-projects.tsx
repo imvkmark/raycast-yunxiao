@@ -11,7 +11,6 @@
 
 import { Action, ActionPanel, Icon, List, Toast, showToast, useNavigation, Keyboard } from "@raycast/api";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { resolveCredentials } from "./api/client";
 import { listProjects } from "./api/projects";
 import { searchSprints } from "./api/sprints";
 import { listTestPlans } from "./api/testplans";
@@ -24,6 +23,7 @@ import {
     type WorkitemCategory,
 } from "./api/types";
 import { listWorkitems } from "./api/workitems";
+import { toErrorDetails as sharedToErrorDetails } from "./utils/error-details";
 import { categoryLabel, formatDateYMD } from "./utils/format";
 import {
     projectCategoryUrl,
@@ -52,52 +52,19 @@ function normalizeCategory(input: string | undefined): CategoryFilter {
     return ALL_CATEGORY_VALUE;
 }
 
-interface ErrorDetails {
-    /** 一行短原因，给 toast 用 */
-    brief: string;
-    /** 完整诊断信息（URL、状态码、响应体），给详情面板与复制用 */
-    details: string;
-}
+const ERROR_DETAILS_HINTS = [
+    "偏好里 Personal Access Token 是否勾选了『项目』读取权限？",
+    "Organization Id 是否与浏览器登录后 URL 中的一致？",
+    "接入点模式是否选对：默认中心版（openapi-rdc.aliyuncs.com），Region 版需要填自部署 URL；Region 版请求 path 不带 organizations/{organizationId}/ 段。",
+    "把上面的 request 行复制到终端，用 curl 加 x-yunxiao-token 头直连，看返回。",
+];
 
-function toErrorDetails(err: unknown): ErrorDetails {
-    const msg = err instanceof Error ? err.message : String(err);
-    const anyErr = err as { status?: number; bodyText?: string; name?: string; url?: string; method?: string };
-    const status = anyErr?.status;
-    const body = anyErr?.bodyText ?? "";
-    const url = anyErr?.url;
-    const method = anyErr?.method ?? "GET";
-    const brief =
-        typeof status === "number" && status > 0
-            ? `${status} · ${msg.split("\n")[0]}`
-            : msg.split("\n")[0] || "未知错误";
-    const lines: string[] = [];
-    lines.push(`时间: ${new Date().toISOString()}`);
-    try {
-        const creds = resolveCredentials();
-        if (creds) {
-            lines.push(`baseUrl: ${creds.baseUrl}`);
-            lines.push(`mode: ${creds.mode}`);
-            lines.push(`organizationId: ${creds.organizationId}`);
-        }
-    } catch {
-        /* ignore */
-    }
-    lines.push(`request: ${method} ${url ?? "(URL 未捕获)"}`);
-    if (typeof status === "number") lines.push(`status: ${status}`);
-    lines.push(`name: ${anyErr?.name ?? "Error"}`);
-    lines.push(`message: ${msg}`);
-    if (body) {
-        lines.push(`response body:`);
-        lines.push(body.length > 4000 ? body.slice(0, 4000) + "\n…(已截断)" : body);
-    }
-    lines.push("");
-    lines.push("排查建议:");
-    lines.push("1. 偏好里 Personal Access Token 是否勾选了『项目』读取权限？");
-    lines.push("2. Organization Id 是否与浏览器登录后 URL 中的一致？");
-    lines.push("3. 接入点模式是否选对：默认中心版（openapi-rdc.aliyuncs.com），Region 版需要填自部署 URL；");
-    lines.push("   Region 版请求 path 不带 organizations/{organizationId}/ 段。");
-    lines.push("4. 把上面的 request 行复制到终端，用 curl 加 x-yunxiao-token 头直连，看返回。");
-    return { brief, details: lines.join("\n") };
+function toErrorDetails(err: unknown) {
+    return sharedToErrorDetails(err, {
+        defaultMethod: "GET",
+        includeCredentialsContext: true,
+        hints: ERROR_DETAILS_HINTS,
+    });
 }
 
 /* ---------- Main command ---------- */
@@ -116,7 +83,6 @@ export default function ListProjects() {
                 const items = await listProjects();
                 if (!cancelled) {
                     setProjects(items);
-                    if (items.length === 0) setError("没有可访问的项目。");
                 }
             } catch (err) {
                 if (!cancelled) {
@@ -163,7 +129,7 @@ export default function ListProjects() {
         >
             <List.EmptyView
                 icon={error ? Icon.ExclamationMark : Icon.Folder}
-                title={error ? "无法加载项目" : "暂无项目"}
+                title={error ? "无法加载项目" : "没有可访问的项目"}
                 description={error ?? "先去 devops.aliyun.com 加入组织，再回来查看。"}
                 actions={
                     error ? (
@@ -286,7 +252,6 @@ function SprintsView({ projectId, projectName }: SprintsViewProps) {
         try {
             const items = await searchSprints({ projectId, status: ["TODO", "DOING"] });
             setSprints(items);
-            if (items.length === 0) setError("该项目下暂无迭代。");
         } catch (err) {
             const { brief, details } = toErrorDetails(err);
             setError(brief);
@@ -304,7 +269,7 @@ function SprintsView({ projectId, projectName }: SprintsViewProps) {
         <List isLoading={sprints === null && !error} searchBarPlaceholder={`在 ${projectName} 的迭代中筛选…`}>
             <List.EmptyView
                 icon={error ? Icon.ExclamationMark : Icon.Calendar}
-                title={error ? "无法加载迭代" : "暂无迭代"}
+                title={error ? "无法加载迭代" : "该项目下暂无迭代"}
                 description={error ?? "在云效中手动创建迭代后回来查看。"}
                 actions={
                     error ? (
@@ -369,7 +334,6 @@ function TestPlansView({ projectId, projectName }: TestPlansViewProps) {
         try {
             const items = await listTestPlans({ projectId });
             setPlans(items);
-            if (items.length === 0) setError("该项目下暂无测试计划。");
         } catch (err) {
             const { brief, details } = toErrorDetails(err);
             setError(brief);
@@ -387,7 +351,7 @@ function TestPlansView({ projectId, projectName }: TestPlansViewProps) {
         <List isLoading={plans === null && !error} searchBarPlaceholder={`在 ${projectName} 的测试计划中筛选…`}>
             <List.EmptyView
                 icon={error ? Icon.ExclamationMark : Icon.Bug}
-                title={error ? "无法加载测试计划" : "暂无测试计划"}
+                title={error ? "无法加载测试计划" : "该项目下暂无测试计划"}
                 description={error ?? "在 Testhub 创建测试计划后回来查看。"}
                 actions={
                     error ? (
@@ -516,7 +480,7 @@ function WorkitemsView({ projectId, projectName }: WorkitemsViewProps) {
             />
             <List.Section title={`${projectName} · ${titleSuffix}`}>
                 {filteredItems.map((workitem) => {
-                    const browserUrl = workitemUrl(projectId, workitem.categoryId, workitem.id);
+                    const browserUrl = workitemUrl(projectId, workitem.category, workitem.id);
                     return (
                         <List.Item
                             key={workitem.id}
